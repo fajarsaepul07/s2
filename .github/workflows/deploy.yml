@@ -1,0 +1,59 @@
+name: api-helpdek-dev
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH Agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            PROJECT_DIR="/data/project/dev/api-helpdesk"
+            SRC_DIR="$PROJECT_DIR"
+
+            echo "==> Deployment mulai di $PROJECT_DIR"
+
+
+            cd $SRC_DIR
+
+
+            git pull origin dev
+            echo "-> Git pull sukses"
+
+            # pastikan file env ada
+            cp .env.example .env
+
+            # rebuild docker
+            cd $PROJECT_DIR
+            docker compose down || true
+            docker compose build --no-cache
+            docker compose up -d
+            echo "-> Docker container berjalan"
+
+            docker compose exec -T app composer install --no-dev --optimize-autoloader
+            docker compose exec -T app php artisan key:generate
+            docker compose exec -T app php artisan storage:link
+            docker compose exec -T app php artisan migrate --force
+            docker compose exec -T app php artisan cache:clear
+            docker compose exec -T app php artisan config:cache
+            docker compose exec -T app php artisan view:cache
+
+            echo "==> Deployment selesai 🎉"

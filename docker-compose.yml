@@ -1,0 +1,61 @@
+networks:
+    laravel:
+        driver: bridge
+
+services:
+    app:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        container_name: laravel_app
+        restart: unless-stopped
+        volumes:
+            - ./src:/var/www/html
+        environment:
+            APP_ENV: local
+            APP_DEBUG: true
+            APP_KEY:
+            APP_URL: https://api-helpdesk-dev.ifven.id
+
+            DB_CONNECTION: pgsql
+            DB_HOST: db
+            DB_PORT: 5432
+            DB_DATABASE: dbhelpdesk
+            DB_USERNAME: userhelpdesk
+            DB_PASSWORD: ax3w@23
+
+        depends_on:
+            - db
+        networks:
+            - laravel
+
+    nginx:
+        image: nginx:alpine
+        container_name: laravel_nginx
+        restart: unless-stopped
+        ports:
+            - "80:80"
+            - "443:443"
+        volumes:
+            - ./src:/var/www/html
+            - ./nginx.conf:/etc/nginx/conf.d/default.conf
+            - /etc/ssl/sectigo/fullchain.pem:/etc/nginx/ssl/fullchain.pem:ro
+            - /etc/ssl/sectigo/domain.key:/etc/nginx/ssl/domain.key:ro
+
+        depends_on:
+            - app
+        networks:
+            - laravel
+
+    db:
+        image: postgres:15
+        container_name: laravel_db
+        restart: unless-stopped
+        environment:
+            POSTGRES_DB: dbhelpdesk
+            POSTGRES_USER: userhelpdesk
+            POSTGRES_PASSWORD: ax3w@23
+        volumes:
+            - ./postgres-data:/var/lib/postgresql/data
+        networks:
+            - laravel
