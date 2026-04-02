@@ -22,7 +22,7 @@
                         <li class="nav-item"><a class="nav-link" href="{{ route('kategori.index') }}">Kategori</a></li>
                         <li class="nav-item"><a class="nav-link" href="{{ route('admin.status.index') }}">Status</a>
                         </li>
-                        <li class="nav-item"><a class="nav-link" href="{{ route('prioritas.index') }}">Prioritas</a>
+                        <li class="nav-item"><a class="nav-link" href="{{ route('admin.prioritas.index') }}">Prioritas</a>
                         </li>
                         <li class="nav-item"><a class="nav-link" href="{{ route('admin.tiket.index') }}">Tiket</a></li>
                     </ul>

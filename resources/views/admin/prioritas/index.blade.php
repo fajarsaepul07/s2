@@ -288,7 +288,7 @@
                 <h4>Daftar Prioritas</h4>
                 <p>Kelola tingkat prioritas tiket dalam sistem</p>
             </div>
-            <a href="{{ route('prioritas.create') }}" class="btn-add-prioritas">
+            <a href="{{ route('admin.prioritas.create') }}" class="btn-add-prioritas">
                 <i class="mdi mdi-plus-circle"></i>
                 Tambah Prioritas
             </a>
@@ -325,12 +325,12 @@
                                 </td>
                                 <td>
                                     <div class="action-buttons-group">
-                                        <a href="{{ route('prioritas.edit', $item) }}"
+                                        <a href="{{ route('admin.prioritas.edit', $item) }}"
                                            class="btn-edit-modern">
                                             <i class="mdi mdi-pencil"></i>
                                         </a>
 
-                                        <form action="{{ route('prioritas.destroy', $item) }}"
+                                        <form action="{{ route('admin.prioritas.destroy', $item) }}"
                                               method="POST"
                                               style="display:inline-block;"
                                               onsubmit="return confirm('Apakah Anda yakin ingin menghapus prioritas ini?');">

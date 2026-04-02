@@ -22,47 +22,40 @@ class PrioritasController extends Controller
         return view('admin.prioritas.create');
     }
 
-    // Tambah prioritas baru
     public function store(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'nama_prioritas' => 'required|string|max:50|unique:priorities,nama_prioritas',
-        ], [
-            'nama_prioritas.required' => 'Nama prioritas wajib diisi',
-            'nama_prioritas.unique' => 'Nama prioritas sudah ada',
-            'nama_prioritas.max' => 'Nama prioritas maksimal 50 karakter',
+{
+    $validator = Validator::make($request->all(), [
+        'nama_prioritas' => 'required|string|max:50|unique:priorities,nama_prioritas',
+    ], [
+        'nama_prioritas.required' => 'Nama prioritas wajib diisi',
+        'nama_prioritas.unique'   => 'Nama prioritas sudah ada',
+        'nama_prioritas.max'      => 'Nama prioritas maksimal 50 karakter',
+    ]);
+
+    if ($validator->fails()) {
+        return redirect()->back()
+            ->withErrors($validator)
+            ->withInput();
+    }
+
+    try {
+        // ✅ Hapus baris setval ini (tidak diperlukan di MySQL)
+        // DB::statement("SELECT setval(...) ...");
+
+        Prioritas::create([
+            'nama_prioritas' => $request->nama_prioritas,
         ]);
 
-        if ($validator->fails()) {
-            return redirect()->back()
-                ->withErrors($validator)
-                ->withInput();
-        }
+        return redirect()->route('prioritas.index')  // atau admin.prioritas.index kalau sudah di-fix
+            ->with('success', 'Prioritas baru berhasil ditambahkan');
 
-        try {
-            // Fix sequence jika ada masalah
-            DB::statement("
-                SELECT setval(
-                    'priorities_prioritas_id_seq', 
-                    (SELECT COALESCE(MAX(prioritas_id), 0) + 1 FROM priorities), 
-                    false
-                )
-            ");
-
-            // Buat prioritas baru
-            Prioritas::create([
-                'nama_prioritas' => $request->nama_prioritas,
-            ]);
-
-            return redirect()->route('prioritas.index')
-                ->with('success', 'Prioritas baru berhasil ditambahkan');
-
-        } catch (\Exception $e) {
-            return redirect()->back()
-                ->withInput()
-                ->with('error', 'Terjadi kesalahan saat menyimpan data. Silakan coba lagi.');
-        }
+    } catch (\Exception $e) {
+        // Untuk debugging, sementara tampilkan error asli
+        return redirect()->back()
+            ->withInput()
+            ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
     }
+}
 
     // Detail prioritas
     public function show($id)

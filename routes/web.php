@@ -80,7 +80,15 @@ Route::middleware('auth')->group(function () {
         Route::resource('kategori', KategoriController::class);
 
         // CRUD Prioritas
-        Route::resource('prioritas', PrioritasController::class);
+Route::resource('prioritas', PrioritasController::class)
+    ->names([
+        'index'   => 'admin.prioritas.index',
+        'create'  => 'admin.prioritas.create',
+        'store'   => 'admin.prioritas.store',
+        'edit'    => 'admin.prioritas.edit',
+        'update'  => 'admin.prioritas.update',
+        'destroy' => 'admin.prioritas.destroy',
+    ]);
 
         // CRUD Status Tiket
         Route::resource('status', TiketStatusController::class)
@@ -227,4 +235,6 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
 
 
 // Fallback route (optional)
-
+Route::fallback(function () {
+    return response()->view('errors.404', [], 404);
+});

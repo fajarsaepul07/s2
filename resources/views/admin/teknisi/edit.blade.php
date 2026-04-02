@@ -350,22 +350,34 @@
                             </div>
 
                             {{-- STATUS --}}
-                            <div class="mb-4">
-                                <label class="form-label">
-                                    <i class="mdi mdi-information"></i>
-                                    Status Laporan
-                                    <span class="required">*</span>
-                                </label>
-                                <select name="status" class="form-select" required>
-                                    <option value="" disabled>-- Pilih Status --</option>
-                                    <option value="diproses" {{ old('status', $report->status) == 'diproses' ? 'selected' : '' }}>
-                                        🔄 Diproses
-                                    </option>
-                                    <option value="selesai" {{ old('status', $report->status) == 'selesai' ? 'selected' : '' }}>
-                                        ✅ Selesai
-                                    </option>
-                                </select>
-                            </div>
+<div class="mb-4">
+    <label class="form-label">
+        <i class="mdi mdi-information"></i>
+        Status Laporan
+        <span class="required">*</span>
+    </label>
+    <select name="status" class="form-select" required>
+        <option value="" disabled>-- Pilih Status --</option>
+        
+        <option value="diproses" {{ old('status', $report->status) == 'diproses' ? 'selected' : '' }}>
+            🔄 Diproses
+        </option>
+        
+        <option value="selesai" {{ old('status', $report->status) == 'selesai' ? 'selected' : '' }}>
+            ✅ Selesai
+        </option>
+        
+        <!-- TAMBAHAN BARU: Status Ditolak -->
+        <option value="ditolak" {{ old('status', $report->status) == 'ditolak' ? 'selected' : '' }}>
+            ❌ Ditolak
+        </option>
+    </select>
+    
+    <small class="text-muted mt-1 d-block">
+        <i class="mdi mdi-information-outline"></i> 
+        Pilih "Ditolak" jika laporan tidak dapat diproses atau tidak sesuai.
+    </small>
+</div>
 
                             {{-- LAMPIRAN BARU --}}
                             <div class="mb-4">

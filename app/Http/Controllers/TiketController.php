@@ -102,7 +102,7 @@ class TiketController extends Controller
             return view('admin.tiket.create', compact('kategoris', 'prioritas', 'statuses', 'users', 'timTeknisi', 'timKonten'));
         }
 
-        // 🔹 User biasa - hanya ambil event dan kategori
+        // 🔹 User biasa - hanya ambil  kategori
         $kategoris = \App\Models\Kategori::all();
 
         return view('tiket.create', compact('kategoris'));

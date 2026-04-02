@@ -114,80 +114,80 @@
     @endif
 
 
-    {{-- STATISTIK CARD --}}
-    <div class="row g-3 mb-4 justify-content-center">
-
-        {{-- Total --}}
-        <div class="col-lg-3 col-md-6">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                       <div class="flex-shrink-0">
-                                <div class="bg-opacity-10 rounded-3 p-3">
-                                    <i class="lni lni-files fs-3 text-primary"></i>
-                                </div>
-                            </div>
-                        <div class="ms-3">
-                            <p class="stats-label">Total Laporan</p>
-                            <div class="stats-value">{{ $reports->count() }}</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {{-- Selesai --}}
-        <div class="col-lg-3 col-md-6">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
+   {{-- STATISTIK CARD (DISESUAIKAN DENGAN HISTORY) --}}
+<div class="row g-3 mb-4">
+    <div class="col-lg-3 col-md-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
                         <div class="bg-opacity-10 rounded-3 p-3">
-                            <i class="lni lni-checkmark-circle text-success" style="font-size: 28px;"></i>
+                            <i class="lni lni-ticket fs-3 text-primary"></i>
                         </div>
-                        <div class="ms-3">
-                            <p class="stats-label">Selesai</p>
-                            <div class="stats-value">{{ $reports->where('status', 'selesai')->count() }}</div>
-                        </div>
+                    </div>
+                    <div class="ms-3">
+                        <p class="stats-label">Total Tiket</p>
+                        <div class="stats-value">{{ $stats['total'] }}</div>
                     </div>
                 </div>
             </div>
         </div>
-
-        {{-- Proses --}}
-        <div class="col-lg-3 col-md-6">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="bg-opacity-10 rounded-3 p-3">
-                            <i class="lni lni-timer text-warning" style="font-size: 28px;"></i>
-                        </div>
-                        <div class="ms-3">
-                            <p class="stats-label">Proses</p>
-                            <div class="stats-value">{{ $reports->where('status', 'proses')->count() }}</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {{-- Urgent --}}
-        <div class="col-lg-3 col-md-6">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="bg-opacity-10 rounded-3 p-3">
-                            <i class="lni lni-cross-circle text-danger" style="font-size: 28px;"></i>
-                        </div>
-                        <div class="ms-3">
-                            <p class="stats-label">Urgent</p>
-                            <div class="stats-value">{{ $reports->where('status', 'urgent')->count() }}</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
     </div>
+
+    <div class="col-lg-3 col-md-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <div class="bg-opacity-10 rounded-3 p-3">
+                            <i class="lni lni-checkmark-circle text-success fs-3"></i>
+                        </div>
+                    </div>
+                    <div class="ms-3">
+                        <p class="stats-label">Selesai</p>
+                        <div class="stats-value">{{ $stats['selesai'] }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-3 col-md-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <div class="bg-opacity-10 rounded-3 p-3">
+                            <i class="lni lni-timer text-warning fs-3"></i>
+                        </div>
+                    </div>
+                    <div class="ms-3">
+                        <p class="stats-label">Diproses</p>
+                        <div class="stats-value">{{ $stats['diproses'] }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-3 col-md-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <div class="bg-opacity-10 rounded-3 p-3">
+                            <i class="lni lni-cross-circle text-danger fs-3"></i>
+                        </div>
+                    </div>
+                    <div class="ms-3">
+                        <p class="stats-label">Ditolak</p>
+                        <div class="stats-value">{{ $stats['ditolak'] }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 
     {{-- FILTER --}}

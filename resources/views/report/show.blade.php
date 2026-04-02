@@ -102,14 +102,8 @@
 
 {{-- Breadcrumb --}}
 <nav aria-label="breadcrumb" class="mb-4">
-    <ol class="breadcrumb bg-transparent p-0">
-        <li class="breadcrumb-item">
-            <a href="{{ route('report.index') }}" class="text-decoration-none">
-                <i class="ti ti-home me-1"></i>Laporan
-            </a>
-        </li>
-        <li class="breadcrumb-item active">Detail</li>
-    </ol>
+    <h3 class="report-title mb-1"><a href="{{ route('report.index') }}" class="text-decoration-none">
+        📋 Laporan Saya </a></h3>
 </nav>
 
 @if (session('success'))
