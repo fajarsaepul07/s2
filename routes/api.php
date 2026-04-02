@@ -12,6 +12,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 // CSRF untuk SPA / front-end
+Route::options('/{any}', function () {
+    return response()->json([], 200);
+})->where('any', '.*');
 Route::get('/sanctum/csrf-cookie', \Laravel\Sanctum\Http\Controllers\CsrfCookieController::class . '@show');
 
 // API Auth

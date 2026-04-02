@@ -104,6 +104,7 @@ class AuthController extends Controller
             'email'    => 'required|email|max:50',
             'password' => 'required|max:50',
         ]);
+        
 
         $user = User::where('email', $request->email)->first();
 
