@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Prioritas;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;   // ← Tambahkan ini
 
 class PrioritasController extends Controller
 {
@@ -22,42 +22,44 @@ class PrioritasController extends Controller
         return view('admin.prioritas.create');
     }
 
+    // Simpan prioritas baru
     public function store(Request $request)
-{
-    $validator = Validator::make($request->all(), [
-        'nama_prioritas' => 'required|string|max:50|unique:priorities,nama_prioritas',
-    ], [
-        'nama_prioritas.required' => 'Nama prioritas wajib diisi',
-        'nama_prioritas.unique'   => 'Nama prioritas sudah ada',
-        'nama_prioritas.max'      => 'Nama prioritas maksimal 50 karakter',
-    ]);
-
-    if ($validator->fails()) {
-        return redirect()->back()
-            ->withErrors($validator)
-            ->withInput();
-    }
-
-    try {
-        // ✅ Hapus baris setval ini (tidak diperlukan di MySQL)
-        // DB::statement("SELECT setval(...) ...");
-
-        Prioritas::create([
-            'nama_prioritas' => $request->nama_prioritas,
+    {
+        $validator = Validator::make($request->all(), [
+            'nama_prioritas' => [
+                'required',
+                'string',
+                'max:50',
+                Rule::unique('priorities', 'nama_prioritas')
+            ],
+        ], [
+            'nama_prioritas.required' => 'Nama prioritas wajib diisi',
+            'nama_prioritas.unique'   => 'Nama prioritas sudah ada',
+            'nama_prioritas.max'      => 'Nama prioritas maksimal 50 karakter',
         ]);
 
-        return redirect()->route('prioritas.index')  // atau admin.prioritas.index kalau sudah di-fix
-            ->with('success', 'Prioritas baru berhasil ditambahkan');
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput();
+        }
 
-    } catch (\Exception $e) {
-        // Untuk debugging, sementara tampilkan error asli
-        return redirect()->back()
-            ->withInput()
-            ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+        try {
+            Prioritas::create([
+                'nama_prioritas' => $request->nama_prioritas,
+            ]);
+
+            return redirect()->route('admin.prioritas.index')
+                ->with('success', 'Prioritas baru berhasil ditambahkan');
+
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Terjadi kesalahan: ' . $e->getMessage() . ' | Line: ' . $e->getLine());
+        }
     }
-}
 
-    // Detail prioritas
+    // Detail prioritas (opsional)
     public function show($id)
     {
         $prioritas = Prioritas::findOrFail($id);
@@ -77,11 +79,17 @@ class PrioritasController extends Controller
         $prioritas = Prioritas::findOrFail($id);
 
         $validator = Validator::make($request->all(), [
-            'nama_prioritas' => 'required|string|max:50|unique:priorities,nama_prioritas,' . $id . ',prioritas_id',
+            'nama_prioritas' => [
+                'required',
+                'string',
+                'max:50',
+                Rule::unique('priorities', 'nama_prioritas')
+                    ->ignore($id, 'prioritas_id')
+            ],
         ], [
             'nama_prioritas.required' => 'Nama prioritas wajib diisi',
-            'nama_prioritas.unique' => 'Nama prioritas sudah ada',
-            'nama_prioritas.max' => 'Nama prioritas maksimal 50 karakter',
+            'nama_prioritas.unique'   => 'Nama prioritas sudah ada',
+            'nama_prioritas.max'      => 'Nama prioritas maksimal 50 karakter',
         ]);
 
         if ($validator->fails()) {
@@ -95,13 +103,13 @@ class PrioritasController extends Controller
                 'nama_prioritas' => $request->nama_prioritas,
             ]);
 
-            return redirect()->route('prioritas.index')
+            return redirect()->route('admin.prioritas.index')
                 ->with('success', 'Prioritas berhasil diperbarui');
 
         } catch (\Exception $e) {
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Terjadi kesalahan saat memperbarui data.');
+                ->with('error', 'Terjadi kesalahan: ' . $e->getMessage() . ' | Line: ' . $e->getLine());
         }
     }
 
@@ -112,12 +120,12 @@ class PrioritasController extends Controller
             $prioritas = Prioritas::findOrFail($id);
             $prioritas->delete();
 
-            return redirect()->route('prioritas.index')
+            return redirect()->route('admin.prioritas.index')
                 ->with('success', 'Prioritas berhasil dihapus');
 
         } catch (\Exception $e) {
-            return redirect()->route('prioritas.index')
-                ->with('error', 'Terjadi kesalahan saat menghapus data.');
+            return redirect()->route('admin.prioritas.index')
+                ->with('error', 'Terjadi kesalahan saat menghapus data: ' . $e->getMessage());
         }
     }
 }

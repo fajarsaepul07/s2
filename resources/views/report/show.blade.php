@@ -199,7 +199,7 @@ Lampiran
 target="_blank"
 class="btn btn-sm btn-primary">
 
-Download
+Lihat Lampiran
 
 </a>
 

@@ -16,19 +16,17 @@ class NotificationController extends Controller
     {
         $user = Auth::user();
 
-        $notifications = Notification::where('user_id', $user->user_id)
-            ->with('tiket')
-            ->orderBy('waktu_kirim', 'desc')
-            ->paginate(10);
+    $notifications = Notification::where('user_id', $user->user_id)
+        ->with('tiket')           // eager load tiket
+        ->orderBy('waktu_kirim', 'desc')
+        ->paginate(15);           // naikkan sedikit agar lebih nyaman
 
-        // Pisahkan view berdasarkan role - FIXED
-        if (in_array($user->role, ['admin', 'tim_teknisi', 'tim_konten'])) {
-            // Untuk admin dan tim (teknisi/konten) gunakan view admin
-            return view('admin.notifications.index', compact('notifications', 'user'));
-        } else {
-            // Untuk user biasa
-            return view('notifications.index', compact('notifications', 'user'));
-        }
+    // Pilih view berdasarkan role
+    if (in_array($user->role, ['admin', 'tim_teknisi', 'tim_konten'])) {
+        return view('admin.notifications.index', compact('notifications'));
+    } 
+
+    return view('notifications.index', compact('notifications'));
     }
 
     /**
@@ -60,58 +58,35 @@ class NotificationController extends Controller
      * Method ini digunakan saat user klik notifikasi
      */
     public function read($id)
-    {
-        try {
-            $user = Auth::user();
-            
-            $notification = Notification::where('notif_id', $id)
-                ->where('user_id', $user->user_id)
-                ->with('tiket')
-                ->firstOrFail();
+{
+    try {
+        $user = Auth::user();
+        
+        $notification = Notification::where('notif_id', $id)
+            ->where('user_id', $user->user_id)
+            ->with('tiket')
+            ->firstOrFail();
 
-            // Tandai sebagai dibaca
-            $notification->update(['status_baca' => true]);
+        $notification->update(['status_baca' => true]);
 
-            // Return JSON jika AJAX request
-            if (request()->wantsJson() || request()->ajax()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Notifikasi berhasil ditandai sebagai dibaca'
-                ]);
+        if ($notification->tiket_id && $notification->tiket) {
+            if ($user->role === 'admin') {
+                return redirect()->route('admin.tiket.show', $notification->tiket_id);
+            } elseif (in_array($user->role, ['tim_teknisi', 'tim_konten'])) {
+                return redirect()->route('tim.tiket.show', $notification->tiket_id);
+            } else {
+                return redirect()->route('tiket.show', $notification->tiket_id);
             }
-
-            // Redirect ke detail tiket jika ada - FIXED untuk semua role
-            if ($notification->tiket_id && $notification->tiket) {
-                // Cek role untuk redirect ke route yang tepat
-                if ($user->role === 'admin') {
-                    // Admin menggunakan route admin
-                    return redirect()->route('admin.tiket.show', $notification->tiket_id);
-                } elseif (in_array($user->role, ['tim_teknisi', 'tim_konten'])) {
-                    // Tim menggunakan route tim
-                    return redirect()->route('tim.tiket.show', $notification->tiket_id);
-                } else {
-                    // User biasa
-                    return redirect()->route('tiket.show', $notification->tiket_id);
-                }
-            }
-
-            // Jika tidak ada tiket terkait, kembali ke halaman notifikasi
-            return redirect()->route('notifications.index')
-                ->with('info', 'Tiket terkait tidak ditemukan');
-
-        } catch (\Exception $e) {
-            Log::error('Error marking notification as read: ' . $e->getMessage());
-            
-            if (request()->wantsJson() || request()->ajax()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Gagal menandai notifikasi: ' . $e->getMessage()
-                ], 500);
-            }
-
-            return redirect()->back()->with('error', 'Gagal menandai notifikasi');
         }
+
+        return redirect()->route('notifications.index')
+            ->with('info', 'Notifikasi ditandai sebagai dibaca.');
+
+    } catch (\Exception $e) {
+        Log::error('Notification read error: ' . $e->getMessage());
+        return redirect()->back()->with('error', 'Gagal memproses notifikasi.');
     }
+}
 
     /**
      * Tandai SEMUA notifikasi sebagai dibaca

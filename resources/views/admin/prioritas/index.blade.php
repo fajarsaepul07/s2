@@ -2,21 +2,6 @@
 
 @section('content')
 
-@if(session('success'))
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        Swal.fire({
-            icon: 'success',
-            title: 'Yeay! 🎉',
-            text: '{{ session('success') }}',
-            timer: 3000,
-            timerProgressBar: true,
-            showConfirmButton: false
-        });
-    });
-</script>
-@endif
-
 <style>
     .index-card {
         border: none;

@@ -515,13 +515,6 @@
                             @endforeach
                         </optgroup>
                         
-                        <optgroup label="🎨 Tim Konten">
-                            @foreach ($timKonten as $konten)
-                                <option value="{{ $konten->user_id }}" {{ $tiket->assigned_to == $konten->user_id ? 'selected' : '' }}>
-                                    {{ $konten->name }}
-                                </option>
-                            @endforeach
-                        </optgroup>
                     </select>
                     <div class="assignment-hint">
                         <i class="mdi mdi-lightbulb-on"></i>

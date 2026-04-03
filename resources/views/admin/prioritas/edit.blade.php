@@ -257,8 +257,10 @@
                 </div>
             @endif
 
-            <form action="{{ route('prioritas.update', $prioritas) }}" method="POST" class="forms-sample">
+            <form action="{{ route('admin.prioritas.update', $prioritas) }}" method="POST" class="forms-sample">
+
                 @csrf
+
                 @method('PUT')
                 
                 <!-- Informasi Prioritas -->
@@ -302,7 +304,7 @@
                     <button type="submit" class="btn btn-update">
                         <i class="mdi mdi-content-save"></i> Update Prioritas
                     </button>
-                    <a href="{{ route('prioritas.index') }}" class="btn btn-cancel">
+                    <a href="{{ route('admin.prioritas.index') }}" class="btn btn-cancel">
                         <i class="mdi mdi-arrow-left"></i> Batal
                     </a>
                 </div>

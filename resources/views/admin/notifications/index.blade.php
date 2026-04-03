@@ -1,35 +1,13 @@
 @extends('layouts.admin.master')
+
 @section('content')
 
-{{-- Load SweetAlert2 CDN --}}
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 @if(session('success'))
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        Swal.fire({
-            icon: 'success',
-            title: 'Berhasil! 🎉',
-            text: '{{ session('success') }}',
-            timer: 3000,
-            timerProgressBar: true,
-            showConfirmButton: false
-        });
-    });
-</script>
-@endif
-
-@if(session('error'))
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        Swal.fire({
-            icon: 'error',
-            title: 'Gagal!',
-            text: '{{ session('error') }}',
-            timer: 3000,
-            timerProgressBar: true,
-            showConfirmButton: false
-        });
+        Swal.fire({ icon: 'success', title: 'Berhasil!', text: '{{ session('success') }}', timer: 2500, showConfirmButton: false });
     });
 </script>
 @endif
@@ -40,9 +18,8 @@
             <div class="card">
                 <div class="card-body">
 
-                    <!-- Header -->
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h4 class="card-title mb-0">Pusat Notifikasi</h4>
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="card-title">🔔 Pusat Notifikasi</h4>
                         @if($notifications->where('status_baca', false)->count() > 0)
                             <button id="mark-all-read-btn" class="btn btn-primary btn-sm">
                                 <i class="mdi mdi-check-all"></i> Tandai Semua Dibaca
@@ -50,93 +27,70 @@
                         @endif
                     </div>
 
-                    <!-- Stats -->
-                    <div class="row mb-4 g-3">
-                        <div class="col-md-4">
-                            <div class="alert alert-primary d-flex justify-content-between align-items-center mb-0">
-                                <span><i class="mdi mdi-bell-badge"></i> Total</span>
-                                <strong>{{ $notifications->total() }}</strong>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="alert alert-warning d-flex justify-content-between align-items-center mb-0">
-                                <span><i class="mdi mdi-email-alert"></i> Belum Dibaca</span>
-                                <strong>{{ $notifications->where('status_baca', false)->count() }}</strong>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="alert alert-success d-flex justify-content-between align-items-center mb-0">
-                                <span><i class="mdi mdi-check-circle"></i> Sudah Dibaca</span>
-                                <strong>{{ $notifications->where('status_baca', true)->count() }}</strong>
-                            </div>
-                        </div>
-                    </div>
+                    <!-- Stats Cards tetap sama (opsional) -->
 
-                    <!-- Table -->
-                    <div class="table-responsive pt-2">
+                    <div class="table-responsive">
                         @if($notifications->count() > 0)
                         <table class="table table-bordered align-middle">
                             <thead class="table-light">
                                 <tr>
                                     <th width="50" class="text-center">#</th>
-                                    <th>Pesan</th>
+                                    <th>Keterangan</th>
                                     <th width="180">Waktu</th>
-                                    <th width="120" class="text-center">Aksi</th>
+                                    <th width="140" class="text-center">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach($notifications as $index => $notification)
-                                <tr class="{{ !$notification->status_baca ? 'table-info' : '' }} notification-row"
-                                    data-notif-id="{{ $notification->notif_id }}"
-                                    data-tiket-id="{{ $notification->tiket_id ?? '' }}"
+                                @foreach($notifications as $index => $notif)
+                                <tr class="{{ !$notif->status_baca ? 'table-info' : '' }} notification-row"
+                                    data-notif-id="{{ $notif->notif_id }}"
+                                    data-tiket-id="{{ $notif->tiket_id ?? '' }}"
                                     style="cursor:pointer;">
-                                    <td class="text-center align-middle">
-                                        @if(!$notification->status_baca)
+
+                                    <td class="text-center">
+                                        @if(!$notif->status_baca)
                                             <i class="mdi mdi-bell-ring text-primary"></i>
                                         @else
                                             <i class="mdi mdi-check text-success"></i>
                                         @endif
                                     </td>
+
                                     <td>
-                                        <strong>{{ $notification->pesan }}</strong><br>
-                                        @if($notification->tiket)
+                                        <strong>{{ $notif->pesan }}</strong>  {{-- Pesan sudah ringkas dari backend --}}
+                                        @if($notif->tiket)
+                                            <br>
                                             <small class="text-muted">
-                                                <i class="mdi mdi-ticket-outline"></i> Tiket #{{ $notification->tiket->kode_tiket }}
+                                                Tiket #{{ $notif->tiket->kode_tiket }}
                                             </small>
                                         @endif
                                     </td>
+
                                     <td>
                                         <small class="text-muted">
-                                            <i class="mdi mdi-clock-outline"></i>
-                                            {{ $notification->waktu_kirim->diffForHumans() }}
-                                        </small><br>
-                                        <small class="text-muted">{{ $notification->waktu_kirim->format('d/m/Y H:i') }}</small>
+                                            {{ $notif->waktu_kirim->diffForHumans() }}<br>
+                                            {{ $notif->waktu_kirim->format('d/m/Y H:i') }}
+                                        </small>
                                     </td>
-                                    <td class="text-center align-middle" onclick="event.stopPropagation();">
-                                        <div class="btn-group" role="group">
-                                            @if($notification->tiket_id)
-                                            <button type="button" 
-                                                    class="btn btn-info btn-sm view-tiket" 
-                                                    data-notif-id="{{ $notification->notif_id }}"
-                                                    data-tiket-id="{{ $notification->tiket_id }}"
-                                                    title="Lihat Tiket">
-                                                <i class="mdi mdi-eye"></i>
-                                            </button>
+
+                                    <td class="text-center" onclick="event.stopPropagation();">
+                                        <div class="btn-group">
+                                            @if($notif->tiket_id)
+                                                <button class="btn btn-info btn-sm view-tiket" 
+                                                        data-notif-id="{{ $notif->notif_id }}"
+                                                        data-tiket-id="{{ $notif->tiket_id }}">
+                                                    <i class="mdi mdi-eye"></i>
+                                                </button>
                                             @endif
-                                            
-                                            @if(!$notification->status_baca)
-                                            <button type="button" 
-                                                    class="btn btn-success btn-sm mark-read-single" 
-                                                    data-notif-id="{{ $notification->notif_id }}"
-                                                    title="Tandai Dibaca">
-                                                <i class="mdi mdi-check"></i>
-                                            </button>
+
+                                            @if(!$notif->status_baca)
+                                                <button class="btn btn-success btn-sm mark-read-single" 
+                                                        data-notif-id="{{ $notif->notif_id }}">
+                                                    <i class="mdi mdi-check"></i>
+                                                </button>
                                             @endif
-                                            
-                                            <button type="button" 
-                                                    class="btn btn-danger btn-sm delete-notif" 
-                                                    data-notif-id="{{ $notification->notif_id }}"
-                                                    title="Hapus">
+
+                                            <button class="btn btn-danger btn-sm delete-notif" 
+                                                    data-notif-id="{{ $notif->notif_id }}">
                                                 <i class="mdi mdi-delete"></i>
                                             </button>
                                         </div>
@@ -151,8 +105,8 @@
                         </div>
                         @else
                             <div class="text-center py-5">
-                                <i class="mdi mdi-bell-off-outline" style="font-size: 70px; color:#ccc;"></i>
-                                <p class="text-muted mt-3 mb-0">Belum ada notifikasi</p>
+                                <i class="mdi mdi-bell-off-outline" style="font-size: 60px; color:#ccc;"></i>
+                                <p class="mt-3">Belum ada notifikasi</p>
                             </div>
                         @endif
                     </div>

@@ -173,31 +173,43 @@ class TiketController extends Controller
 
         $tiket->load(['user', 'kategori', 'prioritas', 'status', 'assignedTo']);
 
-        // 🔔 KIRIM NOTIFIKASI KE ADMIN
-        if (Auth::user()->role !== 'admin') {
-            $admins = User::where('role', 'admin')->get();
+        // ================== NOTIFIKASI SAAT TIKET DIBUAT ==================
 
-            foreach ($admins as $admin) {
-                Notification::create([
-                    'user_id'  => $admin->user_id,
-                    'tiket_id' => $tiket->tiket_id,
-                    'pesan'    => "Tiket baru #{$tiket->kode_tiket} telah dibuat oleh {$tiket->user->name}: {$tiket->judul}",
-                    'waktu_kirim' => now(),
-                    'status_baca' => false,
-                ]);
-            }
-        }
+// Notifikasi ke Admin (jika user biasa yang membuat tiket)
+if (Auth::user()->role !== 'admin') {
+    $admins = User::where('role', 'admin')->get();
+    foreach ($admins as $admin) {
+        Notification::create([
+            'user_id'     => $admin->user_id,
+            'tiket_id'    => $tiket->tiket_id,
+            'pesan'       => "Tiket baru #{$tiket->kode_tiket} telah dibuat",
+            'waktu_kirim' => now(),
+            'status_baca' => false,
+        ]);
+    }
+}
 
-        // 🔔 KIRIM NOTIFIKASI KE TIM YANG DITUGASKAN
-        if ($request->assigned_to) {
-            Notification::create([
-                'user_id'  => $request->assigned_to,
-                'tiket_id' => $tiket->tiket_id,
-                'pesan'    => "Anda telah ditugaskan untuk menangani tiket #{$tiket->kode_tiket}: {$tiket->judul}",
-                'waktu_kirim' => now(),
-                'status_baca' => false,
-            ]);
-        }
+// Notifikasi ke User (jika admin yang membuat tiket untuk user lain)
+if (Auth::user()->role === 'admin' && $tiket->user_id != Auth::id()) {
+    Notification::create([
+        'user_id'     => $tiket->user_id,
+        'tiket_id'    => $tiket->tiket_id,
+        'pesan'       => "Tiket #{$tiket->kode_tiket} telah dibuat untuk Anda",
+        'waktu_kirim' => now(),
+        'status_baca' => false,
+    ]);
+}
+
+// Notifikasi ke Tim yang Ditugaskan
+if ($request->assigned_to) {
+    Notification::create([
+        'user_id'     => $request->assigned_to,
+        'tiket_id'    => $tiket->tiket_id,
+        'pesan'       => "Anda ditugaskan menangani tiket #{$tiket->kode_tiket}",
+        'waktu_kirim' => now(),
+        'status_baca' => false,
+    ]);
+}
 
         if (Auth::user()->role == 'admin') {
             return redirect()->route('admin.tiket.index')
@@ -296,57 +308,44 @@ class TiketController extends Controller
 
             $tiket->save();
 
-            if (Auth::user()->role === 'admin') {
-                $pesan = "Tiket {$tiket->kode_tiket} telah diperbarui. "
-                    . "Status: {$tiket->status->nama_status}, "
-                    . "Prioritas: {$tiket->prioritas->nama_prioritas}.";
+            // Notifikasi saat status berubah
+if (Auth::user()->role === 'admin' && 
+    isset($validated['status_id']) && 
+    $statusIdLama != $validated['status_id']) {
 
-                Notification::create([
-                    'user_id'     => $tiket->user_id,
-                    'tiket_id'    => $tiket->tiket_id,
-                    'pesan'       => $pesan,
-                    'status_baca' => 0,
-                    'waktu_kirim' => now(),
-                ]);
-            }
+    $statusBaru = $tiket->status->nama_status ?? 'Diperbarui';
 
-            $tiket->load(['status', 'user', 'kategori', 'prioritas', 'assignedTo']);
+    Notification::create([
+        'user_id'     => $tiket->user_id,
+        'tiket_id'    => $tiket->tiket_id,
+        'pesan'       => "Tiket #{$tiket->kode_tiket} telah {$statusBaru}",
+        'waktu_kirim' => now(),
+        'status_baca' => false,
+    ]);
+}
 
-            if (Auth::user()->role === 'admin' &&
-                isset($validated['status_id']) &&
-                $statusIdLama != $validated['status_id']) {
+// Notifikasi saat ditugaskan ke tim
+if (Auth::user()->role === 'admin' && 
+    isset($validated['assigned_to']) && 
+    $assignedToLama != $validated['assigned_to'] && 
+    $validated['assigned_to']) {
 
-                Notification::create([
-                    'user_id'  => $tiket->user_id,
-                    'tiket_id' => $tiket->tiket_id,
-                    'pesan'    => "Status tiket #{$tiket->kode_tiket} telah diubah dari '{$statusLama}' menjadi '{$tiket->status->nama_status}'",
-                    'waktu_kirim' => now(),
-                    'status_baca' => false,
-                ]);
-            }
+    Notification::create([
+        'user_id'     => $validated['assigned_to'],
+        'tiket_id'    => $tiket->tiket_id,
+        'pesan'       => "Anda ditugaskan menangani tiket #{$tiket->kode_tiket}",
+        'waktu_kirim' => now(),
+        'status_baca' => false,
+    ]);
 
-            if (Auth::user()->role === 'admin' &&
-                isset($validated['assigned_to']) &&
-                $assignedToLama != $validated['assigned_to']) {
-
-                if ($validated['assigned_to']) {
-                    Notification::create([
-                        'user_id'  => $validated['assigned_to'],
-                        'tiket_id' => $tiket->tiket_id,
-                        'pesan'    => "Anda telah ditugaskan untuk menangani tiket #{$tiket->kode_tiket}: {$tiket->judul}",
-                        'waktu_kirim' => now(),
-                        'status_baca' => false,
-                    ]);
-                }
-
-                Notification::create([
-                    'user_id'  => $tiket->user_id,
-                    'tiket_id' => $tiket->tiket_id,
-                    'pesan'    => "Tiket #{$tiket->kode_tiket} telah ditugaskan ke " . ($tiket->assignedTo ? $tiket->assignedTo->name : 'tim support'),
-                    'waktu_kirim' => now(),
-                    'status_baca' => false,
-                ]);
-            }
+    Notification::create([
+        'user_id'     => $tiket->user_id,
+        'tiket_id'    => $tiket->tiket_id,
+        'pesan'       => "Tiket #{$tiket->kode_tiket} telah ditugaskan ke tim",
+        'waktu_kirim' => now(),
+        'status_baca' => false,
+    ]);
+}
 
             if (Auth::user()->role === 'admin') {
                 return redirect()->route('admin.tiket.index')
@@ -590,29 +589,28 @@ class TiketController extends Controller
             // 🔔 KIRIM NOTIFIKASI KE USER
             $pesan = "Status tiket #{$tiket->kode_tiket} telah diubah dari '{$statusLama}' menjadi '{$tiket->status->nama_status}' oleh " . Auth::user()->name;
 
-            if (! empty($validated['catatan'])) {
-                $pesan .= ". Catatan: {$validated['catatan']}";
-            }
+            // Notifikasi ke User Pemilik Tiket
+$statusBaru = $tiket->status->nama_status;
 
-            Notification::create([
-                'user_id'     => $tiket->user_id,
-                'tiket_id'    => $tiket->tiket_id,
-                'pesan'       => $pesan,
-                'waktu_kirim' => now(),
-                'status_baca' => false,
-            ]);
+Notification::create([
+    'user_id'     => $tiket->user_id,
+    'tiket_id'    => $tiket->tiket_id,
+    'pesan'       => "Tiket #{$tiket->kode_tiket} telah {$statusBaru}",
+    'waktu_kirim' => now(),
+    'status_baca' => false,
+]);
 
-            // 🔔 KIRIM NOTIFIKASI KE ADMIN
-            $admins = User::where('role', 'admin')->get();
-            foreach ($admins as $admin) {
-                Notification::create([
-                    'user_id'  => $admin->user_id,
-                    'tiket_id' => $tiket->tiket_id,
-                    'pesan'    => Auth::user()->name . " telah mengubah status tiket #{$tiket->kode_tiket} menjadi '{$tiket->status->nama_status}'",
-                    'waktu_kirim' => now(),
-                    'status_baca' => false,
-                ]);
-            }
+// Notifikasi ke Admin
+$admins = User::where('role', 'admin')->get();
+foreach ($admins as $admin) {
+    Notification::create([
+        'user_id'     => $admin->user_id,
+        'tiket_id'    => $tiket->tiket_id,
+        'pesan'       => Auth::user()->name . " telah mengubah status tiket #{$tiket->kode_tiket} menjadi {$statusBaru}",
+        'waktu_kirim' => now(),
+        'status_baca' => false,
+    ]);
+}
 
             return redirect()->route('tim.tiket.show', $tiket->tiket_id)
                 ->with('success', 'Tiket berhasil diperbarui');
