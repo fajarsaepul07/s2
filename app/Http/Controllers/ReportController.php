@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Kategori;
+use App\Models\Notification;   // ← TAMBAHAN PENTING
 use App\Models\Prioritas;
 use App\Models\Report;
 use App\Models\Tiket;
@@ -57,7 +58,7 @@ class ReportController extends Controller
 
         // Data untuk dropdown filter
         $kategoris = Kategori::all();
-        $statuses  = ['pending', 'diproses', 'selesai', 'ditolak']; // tetap semua untuk filter
+        $statuses  = ['pending', 'diproses', 'selesai', 'ditolak'];
 
         // Statistik (dihitung dari SEMUA laporan user)
         $stats = [
@@ -141,7 +142,51 @@ class ReportController extends Controller
             $validated['prioritas_id'] = 2; // Medium
         }
 
-        Report::create($validated);
+        // Simpan Report
+        $report = Report::create($validated);
+
+        // Load relasi yang dibutuhkan untuk notifikasi
+        $report->load(['user', 'kategori', 'prioritas']);
+
+        // ================== NOTIFIKASI SAAT REPORT DIBUAT ==================
+
+        // Notifikasi ke Admin (jika user biasa yang membuat)
+        if ($user->role !== 'admin') {
+            $admins = User::where('role', 'admin')->get();
+            foreach ($admins as $admin) {
+                Notification::create([
+                    'user_id'     => $admin->user_id,
+                    'report_id'   => $report->id,
+                    'pesan'       => "Laporan baru '{$report->judul}' telah dibuat oleh {$report->user->name}",
+                    'waktu_kirim' => now(),
+                    'status_baca' => false,
+                ]);
+            }
+        }
+
+        // Notifikasi ke Admin (jika admin membuat untuk user lain) - opsional
+        if ($user->role === 'admin' && $report->user_id != $user->user_id) {
+            Notification::create([
+                'user_id'     => $report->user_id,
+                'report_id'   => $report->id,
+                'pesan'       => "Laporan '{$report->judul}' telah dibuat untuk Anda",
+                'waktu_kirim' => now(),
+                'status_baca' => false,
+            ]);
+        }
+
+        // Notifikasi ke Tim yang Ditugaskan
+        if (!empty($validated['assigned_to'])) {
+            Notification::create([
+                'user_id'     => $validated['assigned_to'],
+                'report_id'   => $report->id,
+                'pesan'       => "Anda ditugaskan menangani laporan: {$report->judul}",
+                'waktu_kirim' => now(),
+                'status_baca' => false,
+            ]);
+        }
+
+        // ================== END NOTIFIKASI ==================
 
         $route = match ($user->role) {
             'admin'       => 'admin.report.index',
@@ -153,7 +198,6 @@ class ReportController extends Controller
         return redirect()->route($route)->with('success', 'Laporan berhasil dikirim!');
     }
 
-    
     /**
      * Detail laporan
      */
@@ -242,9 +286,11 @@ class ReportController extends Controller
             ->with('success', 'Laporan berhasil diperbarui!');
     }
 
-// Helper method untuk admin
+    // Helper method untuk admin
     private function updateAsAdmin(Request $request, Report $report)
     {
+        $statusLama = $report->status;
+
         $validated = $request->validate([
             'judul'        => 'required|string|max:255',
             'kategori_id'  => 'required|exists:kategoris,kategori_id',
@@ -257,18 +303,45 @@ class ReportController extends Controller
 
         $this->handleFileUpload($request, $report, $validated);
         $report->update($validated);
+
+        // Notifikasi saat status berubah
+        if (isset($validated['status']) && $validated['status'] !== $statusLama) {
+            $statusBaru = $validated['status'];
+
+            // Notifikasi ke Pembuat Laporan
+            Notification::create([
+                'user_id'     => $report->user_id,
+                'report_id'   => $report->id,
+                'pesan'       => "Laporan Anda '{$report->judul}' telah berstatus: " . ucfirst($statusBaru),
+                'waktu_kirim' => now(),
+                'status_baca' => false,
+            ]);
+
+            // Notifikasi ke Tim yang Ditugaskan (jika ada)
+            if ($report->assigned_to) {
+                Notification::create([
+                    'user_id'     => $report->assigned_to,
+                    'report_id'   => $report->id,
+                    'pesan'       => "Status laporan '{$report->judul}' diubah menjadi " . ucfirst($statusBaru),
+                    'waktu_kirim' => now(),
+                    'status_baca' => false,
+                ]);
+            }
+        }
     }
 
-// Helper method untuk tim teknisi/konten
+    // Helper method untuk tim teknisi/konten
     private function updateAsTeam(Request $request, Report $report)
     {
+        $statusLama = $report->status;
+
         $validated = $request->validate([
             'deskripsi' => 'string',
             'lampiran'  => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
-            'status'    => 'required|in:diproses,selesai,ditolak', // teknisi hanya 2 pilihan
+            'status'    => 'required|in:diproses,selesai,ditolak',
         ]);
         
-        $report->status    = $validated['status']; // update status
+        $report->status = $validated['status'];
 
         if ($request->hasFile('lampiran')) {
             if ($report->lampiran && Storage::disk('public')->exists($report->lampiran)) {
@@ -278,9 +351,22 @@ class ReportController extends Controller
         }
 
         $report->save();
+
+        // Notifikasi saat status berubah oleh tim
+        if ($validated['status'] !== $statusLama) {
+            $statusBaru = $validated['status'];
+
+            Notification::create([
+                'user_id'     => $report->user_id,
+                'report_id'   => $report->id,
+                'pesan'       => "Laporan '{$report->judul}' telah diubah statusnya menjadi " . ucfirst($statusBaru) . " oleh " . auth()->user()->name,
+                'waktu_kirim' => now(),
+                'status_baca' => false,
+            ]);
+        }
     }
 
-// Helper method untuk user biasa
+    // Helper method untuk user biasa
     private function updateAsUser(Request $request, Report $report)
     {
         $validated = $request->validate([
@@ -294,7 +380,7 @@ class ReportController extends Controller
         $report->update($validated);
     }
 
-// Helper untuk handle upload file
+    // Helper untuk handle upload file
     private function handleFileUpload(Request $request, Report $report, array &$validated)
     {
         if ($request->hasFile('lampiran')) {
@@ -359,16 +445,11 @@ class ReportController extends Controller
     {
         $user = $request->user();
 
-        // Query semua report milik user yang login
         $query = Report::with(['kategori', 'prioritas', 'user', 'assignedUser'])
             ->where('user_id', $user->user_id);
 
-        // === PERBAIKAN LOGIKA UTAMA (sama seperti Tiket) ===
-        // Hanya tampilkan report yang statusnya 'selesai' atau 'ditolak'
-        // Report yang masih pending / diproses TIDAK masuk ke history
         $query->whereIn('status', ['selesai', 'ditolak']);
 
-        // Filter berdasarkan tanggal
         if ($request->filled('start_date')) {
             $query->whereDate('created_at', '>=', $request->start_date);
         }
@@ -377,17 +458,14 @@ class ReportController extends Controller
             $query->whereDate('created_at', '<=', $request->end_date);
         }
 
-        // Filter berdasarkan status
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
-        // Filter berdasarkan kategori
         if ($request->filled('kategori_id')) {
             $query->where('kategori_id', $request->kategori_id);
         }
 
-        // Search berdasarkan judul atau deskripsi
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
                 $q->where('judul', 'like', '%' . $request->search . '%')
@@ -395,31 +473,22 @@ class ReportController extends Controller
             });
         }
 
-        // Sorting: terbaru dulu
         $query->orderByDesc('created_at');
 
-        // Pagination
         $reports = $query->paginate(15);
 
-        // Data untuk dropdown filter
         $kategoris = Kategori::all();
-        $statuses  = ['selesai', 'ditolak'];   // dibatasi sesuai logic history
+        $statuses  = ['selesai', 'ditolak'];
 
-        // Statistik riwayat (tetap dihitung semua report milik user)
         $stats = [
             'total'    => Report::where('user_id', $user->user_id)->count(),
-            'selesai'  => Report::where('user_id', $user->user_id)
-                ->where('status', 'selesai')
-                ->count(),
-            'ditolak'  => Report::where('user_id', $user->user_id)
-                ->where('status', 'ditolak')
-                ->count(),
+            'selesai'  => Report::where('user_id', $user->user_id)->where('status', 'selesai')->count(),
+            'ditolak'  => Report::where('user_id', $user->user_id)->where('status', 'ditolak')->count(),
             'diproses' => Report::where('user_id', $user->user_id)
                 ->whereIn('status', ['pending', 'diproses'])
                 ->count(),
         ];
 
-        // Statistik per kategori
         $kategoriStats = Report::where('user_id', $user->user_id)
             ->selectRaw('kategori_id, count(*) as total')
             ->groupBy('kategori_id')
@@ -429,9 +498,6 @@ class ReportController extends Controller
         return view('report.history', compact('reports', 'kategoris', 'statuses', 'stats', 'kategoriStats'));
     }
 
-/**
- * Export riwayat report (opsional)
- */
     public function exportHistory(Request $request)
     {
         $reports = Report::with(['kategori', 'prioritas', 'user'])
@@ -439,15 +505,9 @@ class ReportController extends Controller
             ->orderByDesc('created_at')
             ->get();
 
-        // Implementasi export sesuai kebutuhan
         return response()->json([
             'message' => 'Export feature coming soon',
             'data'    => $reports,
         ]);
     }
-
-    /**
-     * Tentukan redirect sesuai role user
-     */
-
 }

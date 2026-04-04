@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id('notif_id');
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('tiket_id');
+            $table->unsignedBigInteger('report_id')->nullable()->after('tiket_id');
             $table->text('pesan');
             $table->dateTime('waktu_kirim')->useCurrent();
             $table->boolean('status_baca')->default(false);
@@ -22,6 +23,10 @@ return new class extends Migration
 
             $table->foreign('user_id')->references('user_id')->on('users')->onDelete('cascade');
             $table->foreign('tiket_id')->references('tiket_id')->on('tikets')->onDelete('cascade');
+            $table->foreign('report_id')
+                  ->references('id')
+                  ->on('reports')
+                  ->onDelete('cascade');
         });
 
     }

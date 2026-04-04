@@ -38,7 +38,7 @@ class NotificationController extends Controller
 
         $notifications = Notification::where('user_id', $user->user_id)
             ->where('status_baca', false)
-            ->with('tiket')
+            ->with('tiket', 'report')
             ->orderBy('waktu_kirim', 'desc')
             ->limit(5)
             ->get();
@@ -64,11 +64,23 @@ class NotificationController extends Controller
         
         $notification = Notification::where('notif_id', $id)
             ->where('user_id', $user->user_id)
-            ->with('tiket')
+            ->with(['tiket', 'report'])
             ->firstOrFail();
 
         $notification->update(['status_baca' => true]);
 
+        // Prioritas: jika ada report_id
+        if ($notification->report_id && $notification->report) {
+            if ($user->role === 'admin') {
+                return redirect()->route('admin.report.show', $notification->report_id);
+            } elseif (in_array($user->role, ['tim_teknisi', 'tim_konten'])) {
+                return redirect()->route('admin.teknisi.show', $notification->report_id); // atau route tim yang sesuai
+            } else {
+                return redirect()->route('report.show', $notification->report_id);
+            }
+        }
+
+        // Fallback ke tiket jika tidak ada report
         if ($notification->tiket_id && $notification->tiket) {
             if ($user->role === 'admin') {
                 return redirect()->route('admin.tiket.show', $notification->tiket_id);

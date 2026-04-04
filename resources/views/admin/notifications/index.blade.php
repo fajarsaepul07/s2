@@ -27,8 +27,6 @@
                         @endif
                     </div>
 
-                    <!-- Stats Cards tetap sama (opsional) -->
-
                     <div class="table-responsive">
                         @if($notifications->count() > 0)
                         <table class="table table-bordered align-middle">
@@ -45,6 +43,7 @@
                                 <tr class="{{ !$notif->status_baca ? 'table-info' : '' }} notification-row"
                                     data-notif-id="{{ $notif->notif_id }}"
                                     data-tiket-id="{{ $notif->tiket_id ?? '' }}"
+                                    data-report-id="{{ $notif->report_id ?? '' }}"
                                     style="cursor:pointer;">
 
                                     <td class="text-center">
@@ -56,11 +55,16 @@
                                     </td>
 
                                     <td>
-                                        <strong>{{ $notif->pesan }}</strong>  {{-- Pesan sudah ringkas dari backend --}}
+                                        <strong>{{ $notif->pesan }}</strong>
                                         @if($notif->tiket)
                                             <br>
                                             <small class="text-muted">
                                                 Tiket #{{ $notif->tiket->kode_tiket }}
+                                            </small>
+                                        @elseif($notif->report)
+                                            <br>
+                                            <small class="text-muted">
+                                                Laporan: {{ Str::limit($notif->report->judul ?? 'Laporan', 60) }}
                                             </small>
                                         @endif
                                     </td>
@@ -74,10 +78,11 @@
 
                                     <td class="text-center" onclick="event.stopPropagation();">
                                         <div class="btn-group">
-                                            @if($notif->tiket_id)
-                                                <button class="btn btn-info btn-sm view-tiket" 
+                                            @if($notif->tiket_id || $notif->report_id)
+                                                <button class="btn btn-info btn-sm view-item" 
                                                         data-notif-id="{{ $notif->notif_id }}"
-                                                        data-tiket-id="{{ $notif->tiket_id }}">
+                                                        data-tiket-id="{{ $notif->tiket_id ?? '' }}"
+                                                        data-report-id="{{ $notif->report_id ?? '' }}">
                                                     <i class="mdi mdi-eye"></i>
                                                 </button>
                                             @endif
@@ -120,27 +125,20 @@
 <!-- JavaScript -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('✅ Notification page loaded');
-
-    // CSRF Token
     const csrfToken = '{{ csrf_token() }}';
-    
-    // User role untuk routing yang tepat
     const userRole = '{{ auth()->user()->role }}';
-    console.log('👤 User role:', userRole);
 
-    // Helper function untuk get redirect URL berdasarkan role
-    function getTiketUrl(tiketId) {
-        if (userRole === 'admin') {
-            return `/admin/tiket/${tiketId}`;
-        } else if (userRole === 'tim_teknisi' || userRole === 'tim_konten') {
-            return `/tim/tiket/${tiketId}`;
-        } else {
-            return `/tiket/${tiketId}`;
+    function getRedirectUrl(notif) {
+        if (notif.dataset.reportId) {
+            return `/notifications/${notif.dataset.notifId}/read`;
         }
+        if (notif.dataset.tiketId) {
+            return `/notifications/${notif.dataset.notifId}/read`;
+        }
+        return '#';
     }
 
-    // 1. TANDAI SEMUA SEBAGAI DIBACA
+    // Mark all as read
     const markAllBtn = document.getElementById('mark-all-read-btn');
     if (markAllBtn) {
         markAllBtn.addEventListener('click', function(e) {

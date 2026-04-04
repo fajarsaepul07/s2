@@ -17,6 +17,7 @@ class Notification extends Model
         'user_id',
         'tiket_id',
         'judul',
+        'report_id',
         'pesan',
         'waktu_kirim',
         'status_baca',
@@ -41,6 +42,11 @@ class Notification extends Model
     public function tiket()
     {
         return $this->belongsTo(Tiket::class, 'tiket_id', 'tiket_id');
+    }
+
+    public function report()
+    {
+        return $this->belongsTo(Report::class, 'report_id', 'id');
     }
 
     /**

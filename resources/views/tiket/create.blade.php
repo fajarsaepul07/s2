@@ -206,23 +206,22 @@
                 <div class="row">
 
                     <!-- Kategori -->
-                    <div class="col-md-6 mb-4">
-                        <label for="kategori_id" class="form-label">
-                            <i class="lni lni-tag"></i> Kategori <span class="required">*</span>
-                        </label>
-                        <select name="kategori_id" id="kategori_id" class="form-select @error('kategori_id') is-invalid @enderror" required>
-                            <option value="">-- Pilih Kategori --</option>
-                            @foreach($kategoris as $kategori)
-                                <option value="{{ $kategori->kategori_id }}" {{ old('kategori_id') == $kategori->kategori_id ? 'selected' : '' }}>
-                                    {{ $kategori->nama_kategori }}
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('kategori_id')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                        <small class="text-muted">Pilih kategori yang sesuai</small>
-                    </div>
+                        <div class="mb-4">
+                            <label for="kategori_id" class="form-label">
+                                <i class="lni lni-tag"></i> Kategori <span class="text-danger">*</span>
+                            </label>
+                            <select name="kategori_id" id="kategori_id" class="form-select @error('kategori_id') is-invalid @enderror" required>
+                                <option value="">-- Pilih Kategori --</option>
+                                @foreach ($kategoris as $kategori)
+                                    <option value="{{ $kategori->kategori_id }}" {{ old('kategori_id') == $kategori->kategori_id ? 'selected' : '' }}>
+                                        {{ $kategori->nama_kategori }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('kategori_id')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
 
                     <!-- Judul Tiket -->
                     <div class="col-12 mb-4">
