@@ -107,7 +107,7 @@ class ReportController extends Controller
         return view($view, compact('kategoris', 'prioritas', 'tikets', 'teknisis', 'kontens'));
     }
 
-    /**
+        /**
      * Simpan laporan baru
      */
     public function store(Request $request)
@@ -150,21 +150,28 @@ class ReportController extends Controller
 
         // ================== NOTIFIKASI SAAT REPORT DIBUAT ==================
 
-        // Notifikasi ke Admin (jika user biasa yang membuat)
-        if ($user->role !== 'admin') {
-            $admins = User::where('role', 'admin')->get();
-            foreach ($admins as $admin) {
-                Notification::create([
-                    'user_id'     => $admin->user_id,
-                    'report_id'   => $report->id,
-                    'pesan'       => "Laporan baru '{$report->judul}' telah dibuat oleh {$report->user->name}",
-                    'waktu_kirim' => now(),
-                    'status_baca' => false,
-                ]);
-            }
+        // Notifikasi ke Admin
+        $admins = User::where('role', 'admin')->get();
+        foreach ($admins as $admin) {
+            Notification::create([
+                'user_id'     => $admin->user_id,
+                'report_id'   => $report->id,
+                'pesan'       => "Laporan baru '{$report->judul}' telah dibuat oleh {$report->user->name}",
+                'waktu_kirim' => now(),
+                'status_baca' => false,
+            ]);
         }
 
-        // Notifikasi ke Admin (jika admin membuat untuk user lain) - opsional
+        // TAMBAHAN BARU: Notifikasi ke User sendiri yang membuat laporan
+        Notification::create([
+            'user_id'     => $user->user_id,
+            'report_id'   => $report->id,
+            'pesan'       => "Laporan Anda '{$report->judul}' telah berhasil dibuat",
+            'waktu_kirim' => now(),
+            'status_baca' => false,
+        ]);
+
+        // Notifikasi ke User (jika admin yang membuat untuk user lain)
         if ($user->role === 'admin' && $report->user_id != $user->user_id) {
             Notification::create([
                 'user_id'     => $report->user_id,

@@ -10,26 +10,32 @@ return new class extends Migration
      * Run the migrations.
      */
     public function up(): void
-    {
-        Schema::create('notifications', function (Blueprint $table) {
-            $table->id('notif_id');
-            $table->unsignedBigInteger('user_id');
-            $table->unsignedBigInteger('tiket_id');
-            $table->unsignedBigInteger('report_id')->nullable()->after('tiket_id');
-            $table->text('pesan');
-            $table->dateTime('waktu_kirim')->useCurrent();
-            $table->boolean('status_baca')->default(false);
-            $table->timestamps();
+{
+    Schema::create('notifications', function (Blueprint $table) {
+        $table->id('notif_id');
+        $table->unsignedBigInteger('user_id');
+        
+        $table->unsignedBigInteger('tiket_id')->nullable();
+        $table->unsignedBigInteger('report_id')->nullable();
 
-            $table->foreign('user_id')->references('user_id')->on('users')->onDelete('cascade');
-            $table->foreign('tiket_id')->references('tiket_id')->on('tikets')->onDelete('cascade');
-            $table->foreign('report_id')
-                  ->references('id')
-                  ->on('reports')
-                  ->onDelete('cascade');
-        });
+        $table->text('pesan');
+        $table->dateTime('waktu_kirim')->useCurrent();
+        $table->boolean('status_baca')->default(false);
+        $table->timestamps();
 
-    }
+        // Foreign Keys yang aman (hanya yang tabelnya sudah pasti ada)
+        $table->foreign('user_id')
+              ->references('user_id')
+              ->on('users')
+              ->onDelete('cascade');
+
+        $table->foreign('tiket_id')
+              ->references('tiket_id')
+              ->on('tikets')
+              ->onDelete('cascade');
+
+    });
+}
 
     /**
      * Reverse the migrations.
