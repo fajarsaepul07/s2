@@ -12,18 +12,24 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
-    ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->statefulApi();  // Enable Sanctum untuk SPA
+   ->withMiddleware(function (Middleware $middleware): void {
+    $middleware->statefulApi();  
 
-        $middleware->alias([
-            'check_role' => \App\Http\Middleware\CheckRole::class,
-            'isAdmin' => \App\Http\Middleware\IsAdmin::class,
-        ]);
+    $middleware->alias([
+        'check_role' => \App\Http\Middleware\CheckRole::class,
+        'isAdmin' => \App\Http\Middleware\IsAdmin::class,
+    ]);
 
-        $middleware->prependToGroup('api', [
-            \Illuminate\Http\Middleware\HandleCors::class,
-        ]);
-    })
+    // Perbaikan CORS
+    $middleware->prependToGroup('api', [
+        \Illuminate\Http\Middleware\HandleCors::class,
+    ]);
+
+    // Tambahkan ini agar CORS berjalan lebih awal
+    $middleware->web(append: [
+        \Illuminate\Http\Middleware\HandleCors::class,
+    ]);
+})
     ->withExceptions(function (Exceptions $exceptions): void {
         //
     })->create();

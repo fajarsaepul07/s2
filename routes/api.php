@@ -81,3 +81,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::put('/prioritas/{id}', [PrioritasController::class, 'update']);
     Route::delete('/prioritas/{id}', [PrioritasController::class, 'destroy']);
 });
+
+// === ROUTE GOOGLE LOGIN UNTUK API (Flutter) ===
+Route::post('/auth/google', [AuthController::class, 'googleApiLogin']);
