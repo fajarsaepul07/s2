@@ -9,23 +9,28 @@ use Illuminate\Support\Facades\Auth;
 class HomeController extends Controller
 {
     public function index()
-    {
-        $user = Auth::user();
+{
+    $user = Auth::user();
 
-        // Statistik berdasarkan role
-        if ($user->role === 'admin') {
-            $stats     = $this->getAdminStats();
-            $chartData = $this->getAdminChartData();
-        } elseif (in_array($user->role, ['tim_teknisi', 'tim_konten'])) {
-            $stats     = $this->getTimStats($user);
-            $chartData = $this->getTimChartData($user);
-        } else {
-            $stats     = $this->getUserStats($user);
-            $chartData = $this->getUserChartData($user);
-        }
-
-        return view('home', compact('stats', 'chartData'));
+    if ($user->role === 'admin') {
+        $stats     = $this->getAdminStats();
+        $chartData = $this->getAdminChartData();
+    } elseif (in_array($user->role, ['tim_teknisi', 'tim_konten'])) {
+        $stats     = $this->getTimStats($user);
+        $chartData = $this->getTimChartData($user);
+    } else {
+        $stats     = $this->getUserStats($user);
+        $chartData = $this->getUserChartData($user);
     }
+
+    // === RESPONSE JSON UNTUK FLUTTER ===
+    return response()->json([
+        'success'       => true,
+        'stats'         => $stats,
+        'recent_tikets' => $stats['recent_tikets'] ?? [],
+        'chartData'     => $chartData,
+    ]);
+}
 
     // Statistik untuk Admin
     private function getAdminStats()

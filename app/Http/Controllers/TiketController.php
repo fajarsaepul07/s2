@@ -108,12 +108,69 @@ class TiketController extends Controller
         return view('tiket.create', compact('kategoris'));
     }
 
-    /**
-     * Menyimpan tiket baru
+        /**
+     * Menyimpan tiket baru (Web + API Flutter)
      */
     public function store(Request $request)
     {
-        // 🔹 Validasi berbeda untuk admin dan user
+        // ================== BAGIAN API FLUTTER ==================
+        if ($request->wantsJson() || $request->is('api/*')) {
+            $request->validate([
+                'kategori_id' => 'required|exists:kategoris,kategori_id',
+                'judul'       => 'required|string|max:255',
+                'deskripsi'   => 'nullable|string',
+            ]);
+
+            // Generate kode tiket
+            $today      = Carbon::now()->format('Ymd');
+            $countToday = Tiket::whereDate('waktu_dibuat', Carbon::today())->count() + 1;
+            $kodeTiket  = 'TCK-' . $today . '-' . str_pad($countToday, 4, '0', STR_PAD_LEFT);
+
+            while (Tiket::where('kode_tiket', $kodeTiket)->exists()) {
+                $countToday++;
+                $kodeTiket = 'TCK-' . $today . '-' . str_pad($countToday, 4, '0', STR_PAD_LEFT);
+            }
+
+            // Default values untuk user biasa
+            $statusBaru = \App\Models\TiketStatus::whereIn('nama_status', ['Pending', 'Baru'])->first();
+            $prioritasDefault = \App\Models\Prioritas::where('nama_prioritas', 'Medium')
+                ->orWhere('nama_prioritas', 'Low')
+                ->first();
+
+            $tiket = Tiket::create([
+                'user_id'      => Auth::id(),
+                'kategori_id'  => $request->kategori_id,
+                'status_id'    => $statusBaru ? $statusBaru->status_id : 1,
+                'prioritas_id' => $prioritasDefault ? $prioritasDefault->prioritas_id : 3,
+                'judul'        => $request->judul,
+                'deskripsi'    => $request->deskripsi ?? null,
+                'kode_tiket'   => $kodeTiket,
+                'waktu_dibuat' => now(),
+            ]);
+
+            $tiket->load(['kategori', 'status']);
+
+            // Notifikasi ke Admin (opsional untuk Flutter)
+            $admins = User::where('role', 'admin')->get();
+            foreach ($admins as $admin) {
+                Notification::create([
+                    'user_id'     => $admin->user_id,
+                    'tiket_id'    => $tiket->tiket_id,
+                    'pesan'       => "Tiket baru #{$tiket->kode_tiket} telah dibuat oleh user",
+                    'waktu_kirim' => now(),
+                    'status_baca' => false,
+                ]);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Tiket berhasil dibuat dengan kode: ' . $kodeTiket,
+                'tiket'   => $tiket
+            ], 201);
+        }
+
+        // ================== BAGIAN WEB (Blade) ==================
+        // Kode web kamu tetap sama seperti sebelumnya...
         if (Auth::user()->role === 'admin') {
             $request->validate([
                 'user_id'      => 'required|exists:users,user_id',
@@ -125,7 +182,6 @@ class TiketController extends Controller
                 'assigned_to'  => 'nullable|exists:users,user_id',
             ]);
         } else {
-            // User biasa - tidak perlu status dan prioritas
             $request->validate([
                 'kategori_id' => 'required|exists:kategoris,kategori_id',
                 'judul'       => 'required|string|max:255',
@@ -133,7 +189,7 @@ class TiketController extends Controller
             ]);
         }
 
-        // Generate kode tiket otomatis
+        // Generate kode tiket (sama seperti di API)
         $today      = Carbon::now()->format('Ymd');
         $countToday = Tiket::whereDate('waktu_dibuat', Carbon::today())->count() + 1;
         $kodeTiket  = 'TCK-' . $today . '-' . str_pad($countToday, 4, '0', STR_PAD_LEFT);
@@ -143,19 +199,16 @@ class TiketController extends Controller
             $kodeTiket = 'TCK-' . $today . '-' . str_pad($countToday, 4, '0', STR_PAD_LEFT);
         }
 
-        // 🔹 Set default status dan prioritas untuk user biasa
         if (Auth::user()->role !== 'admin') {
-            // Cari status "Baru" (sesuaikan dengan nama di database Anda)
             $statusBaru = \App\Models\TiketStatus::where('nama_status', 'Baru')->first();
-            // Cari prioritas "Medium" atau "Low" sebagai default
             $prioritasDefault = \App\Models\Prioritas::where('nama_prioritas', 'Medium')
                 ->orWhere('nama_prioritas', 'Low')
                 ->first();
 
             $request->merge([
                 'user_id'      => Auth::id(),
-                'status_id'    => $statusBaru ? $statusBaru->status_id : 1,                // Fallback ke ID 1
-                'prioritas_id' => $prioritasDefault ? $prioritasDefault->prioritas_id : 2, // Fallback ke ID 2
+                'status_id'    => $statusBaru ? $statusBaru->status_id : 1,
+                'prioritas_id' => $prioritasDefault ? $prioritasDefault->prioritas_id : 2,
             ]);
         }
 
@@ -173,43 +226,39 @@ class TiketController extends Controller
 
         $tiket->load(['user', 'kategori', 'prioritas', 'status', 'assignedTo']);
 
-        // ================== NOTIFIKASI SAAT TIKET DIBUAT ==================
+        // Notifikasi (kode lama kamu)
+        if (Auth::user()->role !== 'admin') {
+            $admins = User::where('role', 'admin')->get();
+            foreach ($admins as $admin) {
+                Notification::create([
+                    'user_id'     => $admin->user_id,
+                    'tiket_id'    => $tiket->tiket_id,
+                    'pesan'       => "Tiket baru #{$tiket->kode_tiket} telah dibuat",
+                    'waktu_kirim' => now(),
+                    'status_baca' => false,
+                ]);
+            }
+        }
 
-// Notifikasi ke Admin (jika user biasa yang membuat tiket)
-if (Auth::user()->role !== 'admin') {
-    $admins = User::where('role', 'admin')->get();
-    foreach ($admins as $admin) {
-        Notification::create([
-            'user_id'     => $admin->user_id,
-            'tiket_id'    => $tiket->tiket_id,
-            'pesan'       => "Tiket baru #{$tiket->kode_tiket} telah dibuat",
-            'waktu_kirim' => now(),
-            'status_baca' => false,
-        ]);
-    }
-}
+        if (Auth::user()->role === 'admin' && $tiket->user_id != Auth::id()) {
+            Notification::create([
+                'user_id'     => $tiket->user_id,
+                'tiket_id'    => $tiket->tiket_id,
+                'pesan'       => "Tiket #{$tiket->kode_tiket} telah dibuat untuk Anda",
+                'waktu_kirim' => now(),
+                'status_baca' => false,
+            ]);
+        }
 
-// Notifikasi ke User (jika admin yang membuat tiket untuk user lain)
-if (Auth::user()->role === 'admin' && $tiket->user_id != Auth::id()) {
-    Notification::create([
-        'user_id'     => $tiket->user_id,
-        'tiket_id'    => $tiket->tiket_id,
-        'pesan'       => "Tiket #{$tiket->kode_tiket} telah dibuat untuk Anda",
-        'waktu_kirim' => now(),
-        'status_baca' => false,
-    ]);
-}
-
-// Notifikasi ke Tim yang Ditugaskan
-if ($request->assigned_to) {
-    Notification::create([
-        'user_id'     => $request->assigned_to,
-        'tiket_id'    => $tiket->tiket_id,
-        'pesan'       => "Anda ditugaskan menangani tiket #{$tiket->kode_tiket}",
-        'waktu_kirim' => now(),
-        'status_baca' => false,
-    ]);
-}
+        if ($request->assigned_to) {
+            Notification::create([
+                'user_id'     => $request->assigned_to,
+                'tiket_id'    => $tiket->tiket_id,
+                'pesan'       => "Anda ditugaskan menangani tiket #{$tiket->kode_tiket}",
+                'waktu_kirim' => now(),
+                'status_baca' => false,
+            ]);
+        }
 
         if (Auth::user()->role == 'admin') {
             return redirect()->route('admin.tiket.index')
