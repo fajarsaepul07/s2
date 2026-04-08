@@ -65,7 +65,7 @@
         }
     },
     "config": {
-        "platfom": {
+        "platform": {
             "php": "8.3.0"
         },
         "optimize-autoloader": true,
