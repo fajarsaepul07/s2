@@ -111,6 +111,9 @@ class TiketController extends Controller
         /**
      * Menyimpan tiket baru (Web + API Flutter)
      */
+        /**
+     * Menyimpan tiket baru (Web + API Flutter)
+     */
     public function store(Request $request)
     {
         // ================== BAGIAN API FLUTTER ==================
@@ -131,7 +134,6 @@ class TiketController extends Controller
                 $kodeTiket = 'TCK-' . $today . '-' . str_pad($countToday, 4, '0', STR_PAD_LEFT);
             }
 
-            // Default values untuk user biasa
             $statusBaru = \App\Models\TiketStatus::whereIn('nama_status', ['Pending', 'Baru'])->first();
             $prioritasDefault = \App\Models\Prioritas::where('nama_prioritas', 'Medium')
                 ->orWhere('nama_prioritas', 'Low')
@@ -150,7 +152,7 @@ class TiketController extends Controller
 
             $tiket->load(['kategori', 'status']);
 
-            // Notifikasi ke Admin (opsional untuk Flutter)
+            // Notifikasi ke Admin
             $admins = User::where('role', 'admin')->get();
             foreach ($admins as $admin) {
                 Notification::create([
@@ -170,7 +172,7 @@ class TiketController extends Controller
         }
 
         // ================== BAGIAN WEB (Blade) ==================
-        // Kode web kamu tetap sama seperti sebelumnya...
+        // Kode web kamu tetap sama seperti sebelumnya
         if (Auth::user()->role === 'admin') {
             $request->validate([
                 'user_id'      => 'required|exists:users,user_id',
@@ -189,7 +191,7 @@ class TiketController extends Controller
             ]);
         }
 
-        // Generate kode tiket (sama seperti di API)
+        // Generate kode tiket
         $today      = Carbon::now()->format('Ymd');
         $countToday = Tiket::whereDate('waktu_dibuat', Carbon::today())->count() + 1;
         $kodeTiket  = 'TCK-' . $today . '-' . str_pad($countToday, 4, '0', STR_PAD_LEFT);
@@ -226,7 +228,7 @@ class TiketController extends Controller
 
         $tiket->load(['user', 'kategori', 'prioritas', 'status', 'assignedTo']);
 
-        // Notifikasi (kode lama kamu)
+        // Notifikasi web
         if (Auth::user()->role !== 'admin') {
             $admins = User::where('role', 'admin')->get();
             foreach ($admins as $admin) {

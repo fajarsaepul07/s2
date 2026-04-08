@@ -13,17 +13,22 @@ class HomeController extends Controller
     $user = Auth::user();
 
     if ($user->role === 'admin') {
-        $stats     = $this->getAdminStats();
+        $stats = $this->getAdminStats();
         $chartData = $this->getAdminChartData();
     } elseif (in_array($user->role, ['tim_teknisi', 'tim_konten'])) {
-        $stats     = $this->getTimStats($user);
+        $stats = $this->getTimStats($user);
         $chartData = $this->getTimChartData($user);
     } else {
-        $stats     = $this->getUserStats($user);
+        $stats = $this->getUserStats($user);
         $chartData = $this->getUserChartData($user);
     }
 
-    // === RESPONSE JSON UNTUK FLUTTER ===
+    // Kalau diakses dari browser (bukan API), return view
+    if (!request()->wantsJson() && !request()->is('api/*')) {
+        return view('home', compact('stats', 'chartData'));
+    }
+
+    // Untuk Flutter / API
     return response()->json([
         'success'       => true,
         'stats'         => $stats,
