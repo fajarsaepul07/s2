@@ -418,24 +418,52 @@ if (Auth::user()->role === 'admin' &&
     /**
      * Menghapus tiket
      */
-    public function destroy($id)
-    {
+   public function destroy($id)
+{
+    try {
         $tiket = Tiket::findOrFail($id);
 
-        // Hapus lampiran
+        // Hapus lampiran jika ada
         if ($tiket->lampiran && Storage::exists($tiket->lampiran)) {
             Storage::delete($tiket->lampiran);
         }
 
-        // Hapus komentar tiket
+        // Hapus semua komentar terkait
         $tiket->komentars()->delete();
 
         // Hapus tiket
         $tiket->delete();
 
+        // RESPONSE UNTUK FLUTTER (API)
+        if (request()->wantsJson() || request()->is('api/*')) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Tiket berhasil dihapus'
+            ], 200);
+        }
+
+        // Response untuk Web (Blade)
         return redirect()->route('admin.tiket.index')
             ->with('success', 'Tiket berhasil dihapus.');
+
+    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        if (request()->wantsJson() || request()->is('api/*')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tiket tidak ditemukan'
+            ], 404);
+        }
+        return redirect()->route('tiket.index')->with('error', 'Tiket tidak ditemukan');
+    } catch (\Exception $e) {
+        if (request()->wantsJson() || request()->is('api/*')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 500);
+        }
+        return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
     }
+}
 
     /**
      * Method khusus admin untuk update status cepat

@@ -54,7 +54,7 @@ class HomeController extends Controller
             'laporan_selesai' => Report::where('status', 'selesai')->count(),
 
             // Recent Data
-            'recent_tikets'   => Tiket::with(['user', 'status', 'prioritas'])
+            'recent_tikets'   => Tiket::with(['user', 'status', 'prioritas', 'kategori'])
                 ->latest('waktu_dibuat')
                 ->take(5)
                 ->get(),
@@ -95,7 +95,7 @@ class HomeController extends Controller
                 ->count(),
 
             // Recent Data
-            'recent_tikets'   => Tiket::with(['user', 'status', 'prioritas'])
+            'recent_tikets'   => Tiket::with(['user', 'status', 'prioritas', 'kategori'])
                 ->where('assigned_to', $user->user_id)
                 ->latest('waktu_dibuat')
                 ->take(5)
@@ -137,10 +137,11 @@ class HomeController extends Controller
                 ->count(),
 
             // Recent Data
-            'recent_tikets'   => Tiket::with(['user', 'status', 'prioritas'])
+            'recent_tikets'   => Tiket::with(['user', 'status', 'prioritas', 'kategori'])
                 ->where('user_id', $user->user_id)
                 ->latest('waktu_dibuat')
-                ->take(5)
+                ->take(20
+                )
                 ->get(),
             'recent_reports'  => Report::with(['user', 'kategori', 'prioritas'])
                 ->where('user_id', $user->user_id)
