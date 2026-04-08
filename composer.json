@@ -64,7 +64,7 @@
             "dont-discover": []
         }
     },
-    "config": {
+   "config": {
         "platform": {
             "php": "8.3.0"
         },
