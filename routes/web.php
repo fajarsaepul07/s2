@@ -90,8 +90,6 @@ Route::resource('prioritas', PrioritasController::class)
         'destroy' => 'admin.prioritas.destroy',
     ]);
 
-    //siswasmkassalaam_hepldeks_qzz_io
-    //NhmKwQifGfBYjPLj
 
         // CRUD Status Tiket
         Route::resource('status', TiketStatusController::class)
