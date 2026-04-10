@@ -1,268 +1,122 @@
-<nav class="navbar navbar-expand-lg bg-light shadow-sm py-2 px-4 
-     d-flex justify-content-between align-items-center fixed-top">
+<nav class="navbar navbar-expand-lg bg-light shadow-sm py-2 px-4 fixed-top">
+    <div class="container-fluid">
 
-    <!-- LEFT: Toggle -->
-    <div class="d-flex align-items-center">
-        <button onclick="toggleSidebar()" class="btn btn-outline-primary me-3">
-            <i class="lni lni-menu"></i>
-        </button>
-        <a class="navbar-brand d-flex align-items-center" href="{{ url('/') }}">
-            <img src="{{ asset('user/img/logo/logoo.jpeg') }}" alt="Logo" height="40" class="me-2 rounded" />
-            <h5 class="mb-0 fw-bold text-primary"></h5>
-        </a>
-    </div>
-
-    <!-- CENTER: Search Bar -->
-    <div class="flex-grow-1 d-flex justify-content-center">
-        <form class="search-wrapper w-100" style="max-width: 780px;">
-            <div class="input-group">
-                <span class="input-group-text bg-white border-end-0">
-                    <i class="lni lni-search-alt"></i>
-                </span>
-                <input type="text" class="form-control border-start-0" placeholder="Search...">
-            </div>
-        </form>
-    </div>
-
-    <!-- RIGHT: Notif + Profile -->
-    <div class="d-flex align-items-center gap-3" style="margin-right: 20px;">
-        @auth
-        <!-- Notification Bell -->
-        <div class="dropdown">
-            <a href="#" class="position-relative text-decoration-none" 
-               id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="lni lni-alarm" style="font-size: 24px; color: #0052CC;"></i>
-                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" 
-                      id="notif-badge" style="display: none; font-size: 10px;">
-                    0
-                </span>
+        <!-- LEFT: Toggle Sidebar + Logo -->
+        <div class="d-flex align-items-center">
+            <button onclick="toggleSidebar()" class="btn btn-outline-primary me-3" id="sidebarToggle">
+                <i class="lni lni-menu"></i>
+            </button>
+            
+            <a class="navbar-brand d-flex align-items-center" href="{{ url('/') }}">
+                <img src="{{ asset('user/img/logo/logoo.jpeg') }}" alt="Logo" height="40" class="me-2 rounded" />
+                <h5 class="mb-0 fw-bold text-primary">Helpdesk</h5>
             </a>
-            <ul class="dropdown-menu dropdown-menu-end shadow-lg notification-dropdown" 
-                aria-labelledby="notificationDropdown">
-                <li class="dropdown-header d-flex justify-content-between align-items-center border-bottom p-3 bg-gradient">
-                    <span class="fw-bold text-dark">
-                        <i class="lni lni-bell me-1"></i> Notifikasi
+        </div>
+
+        <!-- RIGHT: Notifikasi + Profile -->
+        <div class="d-flex align-items-center gap-3">
+            @auth
+            <!-- Notification Bell -->
+            <div class="dropdown">
+                <a href="#" class="position-relative text-decoration-none" 
+                   id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="lni lni-alarm" style="font-size: 24px; color: #0052CC;"></i>
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" 
+                          id="notif-badge" style="display: none; font-size: 10px;">
+                        0
                     </span>
-                    <a href="#" id="mark-all-read" class="text-primary small text-decoration-none fw-semibold">
-                        <i class="lni lni-checkmark-circle"></i> Tandai Dibaca
-                    </a>
-                </li>
-                <div id="notification-list" style="max-height: 420px; overflow-y: auto;">
-                    <div class="text-center py-5">
-                        <div class="spinner-border spinner-border-sm text-primary" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                        <p class="text-muted small mt-2 mb-0">Memuat notifikasi...</p>
-                    </div>
-                </div>
-                <li class="dropdown-footer text-center p-2 border-top bg-light">
-                    <a href="{{ route('notifications.index') }}" class="notification-item" style="cursor:pointer;">
-                        <i class="lni lni-eye"></i> Lihat Semua Notifikasi
-                    </a>
-                </li>
-            </ul>
-        </div>
+                </a>
 
-        <!-- Profile Dropdown -->
-        <div class="dropdown">
-            <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle"
-                id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                <img src="{{ asset('assets/images/faces/pp.jpg') }}" alt="Profile" width="40"
-                    height="40" class="rounded-circle me-2" />
-                <span class="fw-semibold text-dark">{{ Auth::user()->name }}</span>
-            </a>
-            <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="profileDropdown">
-                <li>
-                    <a class="dropdown-item" href="#">
-                        <i class="mdi mdi-account-circle text-primary me-2"></i>Profile
-                    </a>
-                </li>
-                <li>
-                    <a class="dropdown-item" href="#">
-                        <i class="mdi mdi-settings text-primary me-2"></i>Settings
-                    </a>
-                </li>
-                <li><hr class="dropdown-divider"></li>
-                <li>
-                    <a class="dropdown-item text-danger" href="{{ route('logout') }}"
-                        onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                        <i class="mdi mdi-logout me-2"></i>Logout
-                    </a>
-                </li>
-            </ul>
-            <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-                @csrf
-            </form>
+                <ul class="dropdown-menu dropdown-menu-end shadow-lg notification-dropdown" 
+                    aria-labelledby="notificationDropdown" style="width: 380px;">
+                    
+                    <li class="dropdown-header d-flex justify-content-between align-items-center border-bottom p-3">
+                        <span class="fw-bold text-dark">
+                            <i class="lni lni-bell me-1"></i> Notifikasi
+                        </span>
+                        <a href="#" id="mark-all-read" class="text-primary small text-decoration-none fw-semibold">
+                            <i class="lni lni-checkmark-circle"></i> Tandai Dibaca
+                        </a>
+                    </li>
+
+                    <div id="notification-list" style="max-height: 420px; overflow-y: auto;">
+                        <!-- JS akan isi -->
+                    </div>
+
+                    <li class="dropdown-footer text-center p-2 border-top">
+                        <a href="{{ route('notifications.index') }}" class="notification-item">
+                            <i class="lni lni-eye"></i> Lihat Semua Notifikasi
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Profile Dropdown -->
+            <div class="dropdown">
+                <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle"
+                   id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <img src="{{ asset('assets/images/faces/pp.jpg') }}" alt="Profile" 
+                         width="40" height="40" class="rounded-circle me-2 border" />
+                    <span class="fw-semibold text-dark d-none d-md-inline">
+                        {{ Auth::user()->name }}
+                    </span>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                    <li>
+                        <a class="dropdown-item text-danger" href="{{ route('logout') }}"
+                           onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                            <i class="mdi mdi-logout me-2"></i> Logout
+                        </a>
+                    </li>
+                </ul>
+                <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                    @csrf
+                </form>
+            </div>
+            @else
+                <a href="{{ route('login') }}" class="btn btn-outline-primary btn-sm px-4">Login</a>
+            @endauth
         </div>
-        @else
-        <!-- Tombol Login/Register jika belum login -->
-        <a href="{{ route('login') }}" class="btn btn-outline-primary btn-sm px-4">Login</a>
-        @endauth
     </div>
 </nav>
 
 <style>
-    body {
-        padding-top: 70px !important;
-    }
+    body { padding-top: 75px !important; }
+    .navbar { height: 75px !important; z-index: 1030; }
 
-    .navbar {
-        height: 70px !important;
-        z-index: 1030;
-    }
-
-    #sidebarToggle {
-        border-radius: 8px;
-    }
-
-    .input-group-text {
-        border-radius: 8px 0 0 8px !important;
-    }
-
-    .form-control {
-        border-radius: 0 8px 8px 0 !important;
-    }
-
-    .nav .search-wrapper {
-        margin-left: auto;
-        margin-right: auto;
-    }
-
-    /* Notification Dropdown Styles */
     .notification-dropdown {
         border-radius: 12px;
-        padding: 0;
-        border: 1px solid #e5e7eb;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1) !important;
         width: 400px !important;
-        max-width: 95vw !important;
-        right: 0 !important;
-        left: auto !important;
-        transform: translateX(0) !important;
-        margin-top: 0.5rem !important;
+        max-width: 95vw;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important;
     }
 
-    /* Perbaikan positioning untuk mobile */
     @media (max-width: 576px) {
         .notification-dropdown {
-            width: 320px !important;
-            right: -10px !important;
+            width: 340px !important;
+            right: 10px !important;
         }
+        .navbar-brand h5 { display: none; }
     }
 
-    .notification-dropdown .dropdown-header {
-        background: #ffffff;
-        border-radius: 12px 12px 0 0;
-        padding: 16px 20px;
-    }
-
+    /* Style notifikasi sama seperti navbar admin kamu */
     .notification-item {
-        padding: 16px 20px;
-        border-bottom: 1px solid #f3f4f6;
-        transition: all 0.2s ease;
-        cursor: pointer;
+        padding: 14px 18px;
+        border-bottom: 1px solid #f1f1f1;
         display: block;
         text-decoration: none;
-        position: relative;
-        background: #ffffff;
+        color: inherit;
     }
-
-    .notification-item:hover {
-        background: #f9fafb;
-    }
-
-    .notification-item.unread {
-        background: #eff6ff;
-        border-left: 4px solid #3b82f6;
-    }
-
-    .notification-item.unread:hover {
-        background: #dbeafe;
-    }
-
-    .notification-dot {
-        width: 8px;
-        height: 8px;
-        background: #3b82f6;
-        border-radius: 50%;
-        flex-shrink: 0;
-        position: absolute;
-        right: 20px;
-        top: 24px;
-    }
-
-    .notification-icon {
-        width: 48px;
-        height: 48px;
-        background: #3b82f6;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 20px;
-        flex-shrink: 0;
-    }
-
-    .notification-icon.read {
-        background: #e5e7eb;
-        color: #6b7280;
-    }
-
-    #notif-badge {
-        animation: badge-bounce 0.5s ease;
-    }
-
-    @keyframes badge-bounce {
-        0%, 100% { transform: translate(-50%, -50%) scale(1); }
-        50% { transform: translate(-50%, -50%) scale(1.2); }
-    }
-
-    /* Scrollbar Custom */
-    #notification-list::-webkit-scrollbar {
-        width: 6px;
-    }
-
-    #notification-list::-webkit-scrollbar-track {
-        background: #f1f1f1;
-    }
-
-    #notification-list::-webkit-scrollbar-thumb {
-        background: #667eea;
-        border-radius: 10px;
-    }
-
-    #notification-list::-webkit-scrollbar-thumb:hover {
-        background: #764ba2;
-    }
-
-    .empty-notification {
-        padding: 3rem 1.5rem;
-        text-align: center;
-    }
-
-    .empty-notification i {
-        font-size: 3.5rem;
-        color: #d1d5db;
-        margin-bottom: 1rem;
-        display: block;
-    }
-
-    .empty-notification p {
-        color: #9ca3af;
-        margin: 0;
-        font-size: 0.95rem;
-    }
+    .notification-item:hover { background: #f8f9fa; }
+    .notification-item.unread { background: #eff6ff; border-left: 4px solid #3b82f6; }
 </style>
 
 <script>
+// Script notifikasi (sama seperti yang sudah kamu punya di navbar admin)
 document.addEventListener('DOMContentLoaded', function() {
     loadNotifications();
-    
-    // Refresh notifikasi setiap 30 detik
     setInterval(loadNotifications, 30000);
 
-    // Tandai semua dibaca
     const markAllBtn = document.getElementById('mark-all-read');
     if (markAllBtn) {
         markAllBtn.addEventListener('click', function(e) {
