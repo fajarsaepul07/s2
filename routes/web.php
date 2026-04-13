@@ -90,6 +90,7 @@ Route::resource('prioritas', PrioritasController::class)
         'destroy' => 'admin.prioritas.destroy',
     ]);
 
+
         // CRUD Status Tiket
         Route::resource('status', TiketStatusController::class)
             ->except(['show'])

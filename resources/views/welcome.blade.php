@@ -282,6 +282,123 @@
         </section>
 
         @include('layouts.components-frontend.footer')
+<style>
+
+/* ================= RESPONSIVE FIX ================= */
+
+/* Hero Section */
+.hero-section img{
+    max-width:100%;
+    height:auto;
+}
+
+.hero-content-wrapper h2{
+    font-size:42px;
+}
+
+.hero-content-wrapper p{
+    font-size:16px;
+}
+
+/* Feature Card */
+.single-feature{
+    height:100%;
+}
+
+/* About Image */
+.about-image img{
+    max-width:100%;
+    height:auto;
+}
+
+/* Contact */
+.contact-form-wrapper{
+    margin-bottom:30px;
+}
+
+/* ================= TABLET ================= */
+
+@media (max-width: 992px){
+
+.hero-content-wrapper{
+    text-align:center;
+    margin-bottom:40px;
+}
+
+.hero-content-wrapper h2{
+    font-size:34px;
+}
+
+.hero-image{
+    text-align:center;
+}
+
+.about-image{
+    text-align:center !important;
+    margin-top:30px;
+}
+
+.section-title{
+    padding:0 10px;
+}
+
+}
+
+/* ================= MOBILE ================= */
+
+@media (max-width: 768px){
+
+.hero-content-wrapper h2{
+    font-size:28px;
+}
+
+.hero-content-wrapper p{
+    font-size:15px;
+}
+
+.button-lg{
+    padding:12px 22px;
+    font-size:14px;
+}
+
+.single-feature{
+    margin-bottom:30px;
+}
+
+.about-content-wrapper ul li{
+    font-size:14px;
+}
+
+.contact-form-wrapper{
+    padding:20px;
+}
+
+.single-item{
+    margin-bottom:20px;
+}
+
+}
+
+/* ================= SMALL MOBILE ================= */
+
+@media (max-width: 576px){
+
+.hero-section{
+    padding-top:80px;
+    padding-bottom:80px;
+}
+
+.section-title h3{
+    font-size:24px;
+}
+
+.hero-content-wrapper h2{
+    font-size:24px;
+}
+
+}
+
+</style>
     
 
 @endsection
