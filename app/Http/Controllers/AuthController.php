@@ -55,6 +55,61 @@ class AuthController extends Controller
         return redirect('/home');
     }
 
+    
+
+       /**
+ * 🔐 Google Login untuk Flutter (API)
+ * Dipanggil dari route: POST /auth/google
+ */
+public function google(Request $request)
+{
+    $request->validate([
+        'id_token' => 'required|string',
+    ]);
+
+    try {
+        // Verifikasi token Google
+        $googleUser = Socialite::driver('google')
+            ->stateless()
+            ->userFromToken($request->id_token);
+
+        // Cari atau buat user baru
+        $user = User::firstOrCreate(
+            ['email' => $googleUser->getEmail()],
+            [
+                'name'      => $googleUser->getName() ?? 'Google User',
+                'google_id' => $googleUser->getId(),
+                'password'  => bcrypt(Str::random(24)),
+                'status'    => 'active',
+                'role'      => 'customer',   // default untuk user Flutter
+            ]
+        );
+
+        // Jika user sudah ada tapi belum punya google_id, update
+        if (!$user->google_id) {
+            $user->update(['google_id' => $googleUser->getId()]);
+        }
+
+        // Buat Sanctum Token
+        $token = $user->createToken('google-login-token')->plainTextToken;
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Login Google berhasil',
+            'user'    => $user,
+            'token'   => $token,
+        ], 200);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Token Google tidak valid atau expired',
+            'error'   => $e->getMessage()
+        ], 401);
+    }
+}
+   
+
     /**
      * 🌐 Login Google Web
      */
@@ -85,6 +140,7 @@ class AuthController extends Controller
             return redirect('/login')->withErrors(['google' => 'Google login gagal']);
         }
     }
+    
 
     /**
      * 🚪 Logout Web

@@ -20,6 +20,7 @@ Route::get('/sanctum/csrf-cookie', \Laravel\Sanctum\Http\Controllers\CsrfCookieC
 // API Auth
 Route::post('/login', [AuthController::class, 'loginApi']);
 Route::post('/register', [AuthController::class, 'registerApi']);
+Route::post('/auth/google', [AuthController::class, 'google']);
 Route::post('/logout', [AuthController::class, 'logoutApi'])->middleware('auth:sanctum');
 
 // Google Login (optional, web only)
@@ -83,4 +84,4 @@ Route::middleware(['auth:sanctum'])->group(function () {
 });
 
 // === ROUTE GOOGLE LOGIN UNTUK API (Flutter) ===
-Route::post('/auth/google', [AuthController::class, 'googleApiLogin']);
+// Route::post('/auth/google', [AuthController::class, 'googleApiLogin']);

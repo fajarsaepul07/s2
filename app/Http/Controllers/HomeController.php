@@ -109,47 +109,53 @@ class HomeController extends Controller
     }
 
     // Statistik untuk User Biasa
-    private function getUserStats($user)
-    {
-        return [
-            // Tiket milik user - DIPERBAIKI ✅
-            'total_tiket'     => Tiket::where('user_id', $user->user_id)->count(),
-            'tiket_baru'      => Tiket::where('user_id', $user->user_id)
-                ->whereHas('status', fn($q) => $q->where('nama_status', 'Pending'))
-                ->count(),
-            'tiket_proses'    => Tiket::where('user_id', $user->user_id)
-                ->whereHas('status', fn($q) => $q->whereIn('nama_status', ['Ditugaskan ke tim terkait', 'Diproses']))
-                ->count(),
-            'tiket_selesai'   => Tiket::where('user_id', $user->user_id)
-                ->whereHas('status', fn($q) => $q->where('nama_status', 'Selesai'))
-                ->count(),
+private function getUserStats($user)
+{
+    return [
+        // Tiket milik user
+        'total_tiket'     => Tiket::where('user_id', $user->user_id)->count(),
+        'tiket_baru'      => Tiket::where('user_id', $user->user_id)
+            ->whereHas('status', fn($q) => $q->where('nama_status', 'Pending'))
+            ->count(),
+        'tiket_proses'    => Tiket::where('user_id', $user->user_id)
+            ->whereHas('status', fn($q) => $q->whereIn('nama_status', ['Ditugaskan ke tim terkait', 'Diproses']))
+            ->count(),
+        'tiket_selesai'   => Tiket::where('user_id', $user->user_id)
+            ->whereHas('status', fn($q) => $q->where('nama_status', 'Selesai'))
+            ->count(),
 
-            // Laporan milik user
-            'total_laporan'   => Report::where('user_id', $user->user_id)->count(),
-            'laporan_pending' => Report::where('user_id', $user->user_id)
-                ->where('status', 'pending')
-                ->count(),
-            'laporan_proses'  => Report::where('user_id', $user->user_id)
-                ->where('status', 'diproses')
-                ->count(),
-            'laporan_selesai' => Report::where('user_id', $user->user_id)
-                ->where('status', 'selesai')
-                ->count(),
+        // Laporan milik user
+        'total_laporan'   => Report::where('user_id', $user->user_id)->count(),
+        'laporan_pending' => Report::where('user_id', $user->user_id)
+            ->where('status', 'pending')
+            ->count(),
+        'laporan_proses'  => Report::where('user_id', $user->user_id)
+            ->where('status', 'diproses')
+            ->count(),
+        'laporan_selesai' => Report::where('user_id', $user->user_id)
+            ->where('status', 'selesai')
+            ->count(),
 
-            // Recent Data
-            'recent_tikets'   => Tiket::with(['user', 'status', 'prioritas', 'kategori'])
-                ->where('user_id', $user->user_id)
-                ->latest('waktu_dibuat')
-                ->take(20
-                )
-                ->get(),
-            'recent_reports'  => Report::with(['user', 'kategori', 'prioritas'])
-                ->where('user_id', $user->user_id)
-                ->latest('created_at')
-                ->take(5)
-                ->get(),
-        ];
-    }
+        // Recent Tikets - DITAMBAHKAN with(['assignedTo'])
+        'recent_tikets'   => Tiket::with([
+                'user', 
+                'status', 
+                'prioritas', 
+                'kategori',
+                'assignedTo'        // ← INI YANG DITAMBAHKAN
+            ])
+            ->where('user_id', $user->user_id)
+            ->latest('waktu_dibuat')
+            ->take(5)
+            ->get(),
+
+        'recent_reports'  => Report::with(['user', 'kategori', 'prioritas'])
+            ->where('user_id', $user->user_id)
+            ->latest('created_at')
+            ->take(5)
+            ->get(),
+    ];
+}
 
     // Chart Data tidak perlu diubah...
     private function getAdminChartData()
