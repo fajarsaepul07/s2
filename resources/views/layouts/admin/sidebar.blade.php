@@ -1,6 +1,5 @@
 <nav class="sidebar sidebar-offcanvas" id="sidebar">
     <ul class="nav">
-        {{-- Semua role bisa melihat Dashboard --}}
         <li class="nav-item">
             <a class="nav-link" href="{{ route('home') }}">
                 <i class="mdi mdi-home menu-icon"></i>
@@ -8,7 +7,6 @@
             </a>
         </li>
 
-        {{-- ✅ Hanya ADMIN yang bisa melihat menu Tiket dan Pengaturan --}}
         @if (auth()->user()->role === 'admin')
             <li class="nav-item">
                 <a class="nav-link" data-toggle="collapse" href="#ui-basic" aria-expanded="false"
