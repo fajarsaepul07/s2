@@ -61,6 +61,10 @@ class AuthController extends Controller
  * 🔐 Google Login untuk Flutter (API)
  * Dipanggil dari route: POST /auth/google
  */
+/**
+ * 🔐 Google Login untuk Flutter (Android)
+ * Dipanggil dari route: POST /auth/google
+ */
 public function google(Request $request)
 {
     $request->validate([
@@ -81,7 +85,7 @@ public function google(Request $request)
                 'google_id' => $googleUser->getId(),
                 'password'  => bcrypt(Str::random(24)),
                 'status'    => 'active',
-                'role'      => 'customer',   // default untuk user Flutter
+                'role'      => 'customer',   // default untuk user Flutter/Android
             ]
         );
 

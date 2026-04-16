@@ -19,7 +19,6 @@
     <style>
         :root{--primary:#0052CC;--secondary:#172B4D;--accent:#00B8D9;}
 
-        /* ===== SIDEBAR ===== */
         .navbar-height { height: 70px !important; }
 
         .sidebar {
@@ -69,7 +68,6 @@
             color: #0052CC;
         }
 
-        /* ===== MAIN CONTENT ===== */
         .main-content {
             margin-left: 260px;
             padding-top: 0px;
@@ -80,7 +78,6 @@
             margin-left: 80px;
         }
 
-        /* MOBILE */
         @media(max-width: 992px) {
             .sidebar { left: -260px; }
             .sidebar.show { left: 0; }
@@ -102,8 +99,6 @@
     <div id="main-content" class="main-content">
         @yield('content')
     </div>
-
-    {{-- FOOTER GLOBAL --}}
 
     {{-- Scroll Top --}}
     <a href="#" class="scroll-top"><i class="lni lni-chevron-up"></i></a>
